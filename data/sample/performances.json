@@ -1,0 +1,167 @@
+[
+  {
+    "performance_id": "PF001",
+    "title": "뮤지컬 〈지킬앤하이드〉",
+    "genre": "뮤지컬",
+    "region": "서울",
+    "venue": "블루스퀘어 신한카드홀",
+    "start_date": "2026-03-15",
+    "end_date": "2026-06-30",
+    "status": "공연중",
+    "poster_url": null
+  },
+  {
+    "performance_id": "PF002",
+    "title": "연극 〈햄릿〉",
+    "genre": "연극",
+    "region": "서울",
+    "venue": "예술의전당 자유소극장",
+    "start_date": "2026-04-01",
+    "end_date": "2026-05-15",
+    "status": "공연중",
+    "poster_url": null
+  },
+  {
+    "performance_id": "PF003",
+    "title": "2026 제주 벚꽃 음악제",
+    "genre": "축제",
+    "region": "제주",
+    "venue": "제주 녹산로 일대",
+    "start_date": "2026-04-05",
+    "end_date": "2026-04-13",
+    "status": "공연완료",
+    "poster_url": null
+  },
+  {
+    "performance_id": "PF004",
+    "title": "서울 재즈 페스티벌 2026",
+    "genre": "대중음악",
+    "region": "서울",
+    "venue": "올림픽공원",
+    "start_date": "2026-05-23",
+    "end_date": "2026-05-25",
+    "status": "공연예정",
+    "poster_url": null
+  },
+  {
+    "performance_id": "PF005",
+    "title": "부산 국제 아트페어",
+    "genre": "전시",
+    "region": "부산",
+    "venue": "벡스코",
+    "start_date": "2026-04-18",
+    "end_date": "2026-04-22",
+    "status": "공연중",
+    "poster_url": null
+  },
+  {
+    "performance_id": "PF006",
+    "title": "제주 해녀 문화 축제",
+    "genre": "축제",
+    "region": "제주",
+    "venue": "제주 해녀박물관 일대",
+    "start_date": "2026-05-01",
+    "end_date": "2026-05-05",
+    "status": "공연예정",
+    "poster_url": null
+  },
+  {
+    "performance_id": "PF007",
+    "title": "뮤지컬 〈위키드〉 내한",
+    "genre": "뮤지컬",
+    "region": "서울",
+    "venue": "샤롯데씨어터",
+    "start_date": "2026-04-10",
+    "end_date": "2026-07-20",
+    "status": "공연중",
+    "poster_url": null
+  },
+  {
+    "performance_id": "PF008",
+    "title": "대구 치맥 페스티벌",
+    "genre": "축제",
+    "region": "대구",
+    "venue": "두류공원",
+    "start_date": "2026-07-10",
+    "end_date": "2026-07-14",
+    "status": "공연예정",
+    "poster_url": null
+  },
+  {
+    "performance_id": "PF009",
+    "title": "제주 아트마켓",
+    "genre": "전시",
+    "region": "제주",
+    "venue": "제주문예회관",
+    "start_date": "2026-04-20",
+    "end_date": "2026-04-27",
+    "status": "공연중",
+    "poster_url": null
+  },
+  {
+    "performance_id": "PF010",
+    "title": "인천 팝업 컬처위크",
+    "genre": "팝업",
+    "region": "인천",
+    "venue": "인천 송도 센트럴파크",
+    "start_date": "2026-05-10",
+    "end_date": "2026-05-18",
+    "status": "공연예정",
+    "poster_url": null
+  },
+  {
+    "performance_id": "PF011",
+    "title": "경기 필하모닉 정기연주회",
+    "genre": "클래식",
+    "region": "경기",
+    "venue": "성남아트센터",
+    "start_date": "2026-04-25",
+    "end_date": "2026-04-25",
+    "status": "공연예정",
+    "poster_url": null
+  },
+  {
+    "performance_id": "PF012",
+    "title": "전주 한옥마을 문화축제",
+    "genre": "축제",
+    "region": "전북",
+    "venue": "전주 한옥마을",
+    "start_date": "2026-04-28",
+    "end_date": "2026-05-04",
+    "status": "공연예정",
+    "poster_url": null
+  },
+  {
+    "performance_id": "PF013",
+    "title": "광주 비엔날레 특별전",
+    "genre": "전시",
+    "region": "광주",
+    "venue": "광주비엔날레전시관",
+    "start_date": "2026-04-01",
+    "end_date": "2026-06-30",
+    "status": "공연중",
+    "poster_url": null
+  },
+  {
+    "performance_id": "PF014",
+    "title": "제주 돌문화 체험 프로그램",
+    "genre": "체험",
+    "region": "제주",
+    "venue": "제주돌문화공원",
+    "start_date": "2026-03-01",
+    "end_date": "2026-12-31",
+    "status": "공연중",
+    "poster_url": null
+  },
+  {
+    "performance_id": "PF015",
+    "title": "강릉 커피 페스티벌",
+    "genre": "축제",
+    "region": "강원",
+    "venue": "강릉 안목해변",
+    "start_date": "2026-05-15",
+    "end_date": "2026-05-18",
+    "status": "공연예정",
+    "poster_url": null
+  }
+]

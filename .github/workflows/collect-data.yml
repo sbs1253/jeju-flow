@@ -1,0 +1,36 @@
+name: Daily Data Collection
+
+on:
+  schedule:
+    # UTC 21:00 = KST 06:00 (매일 아침 6시)
+    - cron: '0 21 * * *'
+  workflow_dispatch: # 수동 실행 가능
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger data collection
+        run: |
+          response=$(curl -s -w "\n%{http_code}" -X POST "${{ secrets.APP_URL }}/api/cron/collect" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json")
+          
+          http_code=$(echo "$response" | tail -1)
+          body=$(echo "$response" | head -n -1)
+          
+          echo "Status: $http_code"
+          echo "Response: $body"
+          
+          if [ "$http_code" != "200" ]; then
+            echo "::error::Data collection failed with status $http_code"
+            exit 1
+          fi
+
+      - name: Log success
+        if: success()
+        run: echo "✅ Data collection completed successfully at $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+
+      - name: Notify on failure
+        if: failure()
+        run: echo "❌ Data collection failed at $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
