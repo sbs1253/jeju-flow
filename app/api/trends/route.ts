@@ -159,6 +159,27 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("[API] Trends error:", error);
-    return NextResponse.json(sampleTrends);
+    
+    // ── 스마트 모킹: 환경 변수가 없을 때 필터에 맞춰 샘플 데이터 가공 ──
+    const { searchParams } = new URL(request.url);
+    const gender = searchParams.get("gender");
+    const device = searchParams.get("device");
+    
+    const mockedTrends = JSON.parse(JSON.stringify(sampleTrends));
+    
+    mockedTrends.results.forEach((res: any) => {
+      // 필터에 따른 가짜 변화 부여 (UI 피드백용)
+      let multiplier = 1.0;
+      if (gender === 'm') multiplier *= 1.2;
+      if (gender === 'f') multiplier *= 0.8;
+      if (device === 'pc') multiplier *= 1.1;
+      if (device === 'mo') multiplier *= 0.9;
+      
+      res.data.forEach((d: any) => {
+        d.ratio = Math.min(100, Math.max(0, d.ratio * multiplier + (Math.random() * 2 - 1)));
+      });
+    });
+
+    return NextResponse.json(mockedTrends);
   }
 }

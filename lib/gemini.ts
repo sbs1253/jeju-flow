@@ -18,7 +18,7 @@ function getAIClient(): GoogleGenAI {
   return aiClient;
 }
 
-const MODEL_NAME = 'gemini-3.1-flash-lite';
+const MODEL_NAME = 'gemini-3.1-flash-lite-preview';
 
 // ─────────────────────────────────────────
 // 타입 정의
@@ -110,26 +110,69 @@ export async function generateUnifiedInsight(
       .map((t) => `[${t.group}] -> 평균:${t.avgRatio}, 변화:${t.changeRate}%`)
       .join('\n');
 
-    const prompt = `문화 데이터를 분석하여 전략 리포트를 생성하세요. 타겟: ${JSON.stringify(persona)}, 데이터: ${dataContext}`;
+    // ── 타겟 페르소나 설명 보강 ──
+    const ageLabels: Record<string, string> = {
+      "3": "20-24세", "4": "25-29세", "5": "30-34세", "6": "35-39세",
+      "7": "40-44세", "8": "45-49세", "9": "50-54세", "10": "55-59세"
+    };
+    
+    const targetAges = persona.ages?.map((a: string) => ageLabels[a] || a).join(", ") || "전체 연령대";
+    const targetGender = persona.gender === "m" ? "남성" : persona.gender === "f" ? "여성" : "전체 성별";
+    const targetDevice = persona.device === "pc" ? "PC" : persona.device === "mo" ? "모바일" : "모든 기기";
+
+    const prompt = `
+      당신은 제주도 문화 기획 전문가입니다. 다음 데이터를 바탕으로 **반드시 선택된 타겟 그룹에 집중한** 분석 리포트를 작성하세요.
+      
+      [현재 필터링 타겟]
+      - 연령대: ${targetAges}
+      - 성별: ${targetGender}
+      - 접속 기기: ${targetDevice}
+      
+      [데이터 컨텍스트]
+      ${dataContext}
+      
+      [작성 지침]
+      1. 모든 인사이트는 위에서 명시한 '${targetAges}' 그룹의 라이프스타일과 취향에 맞춰져야 합니다. 
+      2. 만약 타겟이 30대라면, 50대나 다른 연령대의 이야기는 배제하고 30대에게 매력적인 제주도 문화 기획안을 제시하세요.
+      3. 제공된 데이터의 트렌드 변화율을 근거로 활용하세요.
+    `;
 
     // ── 공식 가이드 규격 호출 ──
-    const response = await ai.models.generateContent({
-      model: MODEL_NAME,
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: responseSchema as any
-      }
-    });
+    let response;
+    try {
+      response = await ai.models.generateContent({
+        model: MODEL_NAME,
+        contents: prompt,
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: responseSchema as any
+        }
+      });
+    } catch (e: any) {
+      console.warn(`⚠️ [Gemini] ${MODEL_NAME} failed, trying fallback gemini-1.5-flash-latest...`);
+      response = await ai.models.generateContent({
+        model: "gemini-1.5-flash-latest",
+        contents: prompt,
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: responseSchema as any
+        }
+      });
+    }
 
-    // ── 💡 응답 파싱: response.text 속성 사용 ──
-    let responseText = response.text; 
+    // ── 💡 응답 파싱: 최신 SDK는 response.text를 바로 제공하거나 response.response.text() 사용 ──
+    let responseText = "";
+    
+    if (typeof (response as any).text === 'string') {
+      responseText = (response as any).text;
+    } else if (typeof (response as any).text === 'function') {
+      responseText = (response as any).text();
+    } else if ((response as any).candidates?.[0]?.content?.parts?.[0]?.text) {
+      responseText = (response as any).candidates[0].content.parts[0].text;
+    }
 
     if (!responseText) {
-      // 폴백: candidates 구조 확인
-      const fallbackText = (response as any).candidates?.[0]?.content?.parts?.[0]?.text;
-      if (!fallbackText) throw new Error('AI 응답 본문을 찾을 수 없습니다.');
-      responseText = fallbackText;
+      throw new Error('AI 응답 본문을 찾을 수 없습니다.');
     }
 
     // JSON 문자열 정화 (마크다운 코드 블록 제거 등)

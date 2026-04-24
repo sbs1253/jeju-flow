@@ -430,7 +430,9 @@ export function ModernOverview({
 
           <div className="p-10 bg-[#09090b] border border-white/5 rounded-[3rem] shadow-2xl relative overflow-hidden group">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500/0 via-indigo-500/50 to-indigo-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-            <TrendLineChart data={trends?.results} />
+            <div className="w-full h-[400px]">
+              <TrendLineChart data={trends?.results} />
+            </div>
           </div>
         </div>
 

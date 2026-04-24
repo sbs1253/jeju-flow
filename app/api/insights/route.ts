@@ -76,7 +76,36 @@ export async function POST(request: NextRequest) {
     const { createServerSupabaseClient } = await import("@/lib/supabase");
     const supabase = createServerSupabaseClient();
 
-    // ── 1. 데이터 전처리 ──
+    // ── 1. DB 캐시 확인 (중복 생성 방지) ──
+    if (supabase) {
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+
+      const { data: existingCache } = await supabase
+        .from("ai_insights")
+        .select("*")
+        .eq("filter_key", filterKey)
+        .gte("generated_at", todayStart.toISOString())
+        .limit(3);
+
+      if (existingCache && existingCache.length >= 3) {
+        console.log(`[Insights] Cache HIT in POST for ${filterKey}. Returning existing data.`);
+        const summaryRow = existingCache.find((r) => r.insight_type === "weekly_summary");
+        const jejuIdeas = existingCache.find((r) => r.insight_type === "jeju_idea");
+        const trendKw = existingCache.find((r) => r.insight_type === "trending_keywords");
+
+        return NextResponse.json({
+          success: true,
+          weekly_summary: summaryRow ? JSON.parse(summaryRow.content) : null,
+          jeju_insights: jejuIdeas ? JSON.parse(jejuIdeas.content) : [],
+          trending_keywords: trendKw ? JSON.parse(trendKw.content) : null,
+          generated_at: existingCache[0].generated_at,
+          is_cached: true
+        });
+      }
+    }
+
+    // ── 2. 데이터 전처리 ──
     const trendInput = chartData.results.map((r: any) => {
       const ratios = r.data.map((d: any) => d.ratio);
       const mid = Math.floor(ratios.length / 2);
@@ -94,7 +123,7 @@ export async function POST(request: NextRequest) {
       };
     });
 
-    // ── 2. 통합 AI 분석 (단 1회의 호출) ──
+    // ── 3. 통합 AI 분석 (단 1회의 호출) ──
     const unifiedResult = await generateUnifiedInsight(
       trendInput, 
       { totalCount: 124, genreBreakdown: { "뮤지컬": 45, "전시": 32 }, jejuCount: 12 }, 
@@ -103,13 +132,20 @@ export async function POST(request: NextRequest) {
 
     // ── 3. DB 저장 (트랜잭션 효과를 위해 개별 저장) ──
     const timestamp = new Date().toISOString();
-    const { error: dbError } = await supabase.from("ai_insights").insert([
-      { insight_type: "weekly_summary", title: `필터 분석: ${filterKey}`, content: JSON.stringify(unifiedResult.weekly_summary), filter_key: filterKey, generated_at: timestamp },
-      { insight_type: "jeju_idea", title: `필터 기획: ${filterKey}`, content: JSON.stringify(unifiedResult.jeju_insights), filter_key: filterKey, generated_at: timestamp },
-      { insight_type: "trending_keywords", title: `필터 키워드: ${filterKey}`, content: JSON.stringify(unifiedResult.trending_keywords), filter_key: filterKey, generated_at: timestamp }
-    ]);
+    
+    if (supabase) {
+      const { error: dbError } = await supabase.from("ai_insights").insert([
+        { insight_type: "weekly_summary", title: `필터 분석: ${filterKey}`, content: JSON.stringify(unifiedResult.weekly_summary), filter_key: filterKey, generated_at: timestamp },
+        { insight_type: "jeju_idea", title: `필터 기획: ${filterKey}`, content: JSON.stringify(unifiedResult.jeju_insights), filter_key: filterKey, generated_at: timestamp },
+        { insight_type: "trending_keywords", title: `필터 키워드: ${filterKey}`, content: JSON.stringify(unifiedResult.trending_keywords), filter_key: filterKey, generated_at: timestamp }
+      ]);
 
-    if (dbError) throw dbError;
+      if (dbError) {
+        console.warn("⚠️ [Insights] Failed to save to DB, but returning result:", dbError);
+      }
+    } else {
+      console.warn("⚠️ [Insights] Supabase client missing. Skipping DB storage.");
+    }
 
     return NextResponse.json({ 
       success: true, 

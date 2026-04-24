@@ -6,7 +6,8 @@ export function createServerSupabaseClient() {
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!supabaseUrl || !supabaseServiceKey) {
-    throw new Error("Missing Supabase environment variables");
+    console.warn("⚠️ [Supabase] Missing environment variables. DB operations will be skipped.");
+    return null;
   }
 
   return createClient(supabaseUrl, supabaseServiceKey, {
@@ -20,7 +21,8 @@ export function createBrowserSupabaseClient() {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error("Missing Supabase environment variables");
+    console.warn("⚠️ [Supabase] Missing browser environment variables.");
+    return null;
   }
 
   return createClient(supabaseUrl, supabaseAnonKey);

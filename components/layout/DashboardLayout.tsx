@@ -280,11 +280,13 @@ export default function DashboardLayout({
             <span className="font-black tracking-tighter">JEJU CULTURE</span>
           </Link>
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-            <SheetTrigger>
-              <Button variant="ghost" size="icon">
-                <Menu className="w-6 h-6" />
-              </Button>
-            </SheetTrigger>
+            <SheetTrigger
+              render={
+                <Button variant="ghost" size="icon" aria-label="메뉴 열기">
+                  <Menu className="w-6 h-6" />
+                </Button>
+              }
+            />
             <SheetContent side="left" className="w-64 p-0 bg-background/95 backdrop-blur-xl">
               <SheetTitle className="sr-only">Menu</SheetTitle>
               <SidebarContent onNavigate={() => setMobileOpen(false)} />
