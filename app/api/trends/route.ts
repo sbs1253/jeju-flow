@@ -11,6 +11,17 @@ const USE_SAMPLE = process.env.USE_SAMPLE_DATA === "true";
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
+    const formatPeriod = (start: string, end: string) => {
+      if (!start || !end) return "Loading...";
+      const s = new Date(start);
+      const e = new Date(end);
+      // 연도가 다를 경우 또는 현재 연도가 아닐 경우에만 연도 표시
+      const showYear = s.getFullYear() !== e.getFullYear() || s.getFullYear() !== new Date().getFullYear();
+      if (showYear) {
+        return `${s.getFullYear()}.${s.getMonth() + 1}.${s.getDate()} ~ ${e.getFullYear()}.${e.getMonth() + 1}.${e.getDate()}`;
+      }
+      return `${s.getMonth() + 1}.${s.getDate()} ~ ${e.getMonth() + 1}.${e.getDate()}`;
+    };
     const date = searchParams.get("date");
     const gender = searchParams.get("gender");
     const device = searchParams.get("device");
@@ -67,10 +78,9 @@ export async function GET(request: NextRequest) {
         });
       }
 
-      // ── 3. 캐시 없음: 네이버 실시간 데이터 요청 ──
-      console.log(`[API] Cache MISS. Fetching LIVE from Naver: ${filterKey}`);
-      
-      const liveData = await fetchRecentTrends(days * 2, "date", {
+      // 분석을 위해 2배 기간을 가져옴 (비교군 확보)
+      const fetchDays = days * 2;
+      const liveData = await fetchRecentTrends(fetchDays, "date", {
         gender: gender === 'undefined' ? undefined : (gender as any),
         device: device === 'undefined' ? undefined : (device as any),
         ages: ages.length > 0 ? ages : undefined

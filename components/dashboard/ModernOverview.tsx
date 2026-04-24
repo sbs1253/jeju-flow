@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   BarChart3,
@@ -24,6 +25,10 @@ import {
   Clock,
   CheckCircle2,
   Target,
+  Music,
+  PartyPopper,
+  Image,
+  Mic2
 } from "lucide-react";
 import { StatCard } from "@/components/cards/StatCard";
 import { InsightCard } from "@/components/cards/InsightCard";
@@ -79,6 +84,11 @@ export function ModernOverview({
     if (!start || !end) return "Loading...";
     const s = new Date(start);
     const e = new Date(end);
+    // 연도가 다를 경우 또는 현재 연도가 아닐 경우에만 연도 표시
+    const showYear = s.getFullYear() !== e.getFullYear() || s.getFullYear() !== new Date().getFullYear();
+    if (showYear) {
+      return `${s.getFullYear()}.${s.getMonth() + 1}.${s.getDate()} ~ ${e.getFullYear()}.${e.getMonth() + 1}.${e.getDate()}`;
+    }
     return `${s.getMonth() + 1}.${s.getDate()} ~ ${e.getMonth() + 1}.${e.getDate()}`;
   };
 
@@ -98,19 +108,25 @@ export function ModernOverview({
     
     if (series?.data?.length >= 2) {
       const ratios = series.data.map((d: any) => d.ratio);
-      const mid = Math.floor(ratios.length / 2);
-      const firstHalf = ratios.slice(0, mid);
-      const secondHalf = ratios.slice(mid);
+      const period = filters.period || 30;
       
-      const firstAvg = firstHalf.reduce((a: number, b: number) => a + b, 0) / (firstHalf.length || 1);
-      const secondAvg = secondHalf.reduce((a: number, b: number) => a + b, 0) / (secondHalf.length || 1);
+      const secondHalf = ratios.slice(-period);
+      const firstHalf = ratios.slice(-(period * 2), -period);
       
-      changeRate = firstAvg === 0 ? 0 : ((secondAvg - firstAvg) / firstAvg) * 100;
+      const firstAvg = firstHalf.length > 0 ? firstHalf.reduce((a: number, b: number) => a + b, 0) / firstHalf.length : 0;
+      const secondAvg = secondHalf.length > 0 ? secondHalf.reduce((a: number, b: number) => a + b, 0) / secondHalf.length : 0;
+      
+      const rate = firstAvg === 0 ? 0 : ((secondAvg - firstAvg) / firstAvg) * 100;
+      
+      return { 
+        ratio: Math.round(secondAvg * 10) / 10, 
+        changeRate: Math.round(rate * 10) / 10 
+      };
     }
 
     return {
       ratio: getLatestRatio(groupTitle),
-      changeRate: Math.round(changeRate * 10) / 10
+      changeRate: 0
     };
   };
 
@@ -137,7 +153,30 @@ export function ModernOverview({
   };
 
   return (
-    <div className="space-y-10 pb-24 text-slate-200">
+    <div className="space-y-10 pb-24 text-slate-200 relative">
+      {/* ── Background Glow ── */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <motion.div 
+          animate={{ 
+            x: [0, 100, 0], 
+            y: [0, 50, 0],
+            opacity: [0.1, 0.2, 0.1]
+          }}
+          transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+          className="absolute top-[20%] right-[10%] w-[500px] h-[500px] bg-indigo-500/10 blur-[120px] rounded-full" 
+        />
+        <motion.div 
+          animate={{ 
+            x: [0, -80, 0], 
+            y: [0, 120, 0],
+            opacity: [0.05, 0.15, 0.05]
+          }}
+          transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+          className="absolute bottom-[10%] left-[5%] w-[600px] h-[600px] bg-sky-500/10 blur-[150px] rounded-full" 
+        />
+      </div>
+
+      <div className="relative z-10 space-y-10">
       {/* ── Breaking News Ticker ── */}
       <div className="w-full bg-slate-900/50 backdrop-blur-md border-y border-white/5 overflow-hidden py-3">
         <div className="max-w-[1400px] mx-auto px-6 flex items-center gap-6">
@@ -168,9 +207,21 @@ export function ModernOverview({
                 National Trend Intelligence
               </p>
               <div className="h-4 w-px bg-white/10 hidden sm:block"></div>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest hidden sm:block">
-                 Period: {formatPeriod(displayStartDate, displayEndDate)}
-              </p>
+               <div className="flex items-center gap-2">
+                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest hidden sm:block">
+                    Period: {formatPeriod(displayStartDate, displayEndDate)}
+                 </p>
+                 <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="w-3 h-3 text-slate-500 cursor-help hover:text-indigo-400 transition-colors" />
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="bg-slate-900 border-white/10 text-[11px] p-2 max-w-[200px] text-slate-300">
+                        추이 분석(MoM/WoW)을 위해 선택한 기간의 2배 데이터를 포함합니다.
+                      </TooltipContent>
+                    </Tooltip>
+                 </TooltipProvider>
+               </div>
            </div>
         </div>
         
@@ -354,7 +405,7 @@ export function ModernOverview({
           title="공연·뮤지컬"
           value={getTrendData("공연").ratio.toFixed(1)}
           subtitle="Search Intensity"
-          icon={BarChart3}
+          icon={Music}
           trend={{ value: getTrendData("공연").changeRate, label: "VS PREV" }}
           color="ocean"
           delay={0.1}
@@ -363,7 +414,7 @@ export function ModernOverview({
           title="축제·페스티벌"
           value={getTrendData("축제").ratio.toFixed(1)}
           subtitle="Search Intensity"
-          icon={TrendingUp}
+          icon={PartyPopper}
           trend={{ value: getTrendData("축제").changeRate, label: "VS PREV" }}
           color="tangerine"
           delay={0.2}
@@ -372,7 +423,7 @@ export function ModernOverview({
           title="전시·미술"
           value={getTrendData("전시").ratio.toFixed(1)}
           subtitle="Search Intensity"
-          icon={MapPin}
+          icon={Image}
           trend={{ value: getTrendData("전시").changeRate, label: "VS PREV" }}
           color="lava"
           delay={0.3}
@@ -381,7 +432,7 @@ export function ModernOverview({
           title="클래식·국악"
           value={getTrendData("클래식").ratio.toFixed(1)}
           subtitle="Search Intensity"
-          icon={Sparkles}
+          icon={Mic2}
           trend={{ value: getTrendData("클래식").changeRate, label: "VS PREV" }}
           color="forest"
           delay={0.4}
@@ -449,35 +500,47 @@ export function ModernOverview({
                 </div>
               )}
             </div>
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
               {jejuInsights.length > 0 ? (
-                jejuInsights.slice(0, 3).map((idea: any, idx: number) => (
+                jejuInsights.map((idea: any, idx: number) => (
                   <motion.div
                     key={idx}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.6 + idx * 0.1 }}
-                    className="p-6 bg-slate-900/50 border border-white/5 rounded-3xl cursor-default group hover:border-indigo-500/30 transition-all"
+                    initial={{ opacity: 0, x: 30 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    whileHover={{ 
+                      scale: 1.02, 
+                      backgroundColor: "rgba(99, 102, 241, 0.05)",
+                      borderColor: "rgba(99, 102, 241, 0.3)" 
+                    }}
+                    transition={{ delay: idx * 0.1, type: "spring", stiffness: 100 }}
+                    className="p-6 bg-slate-900/50 border border-white/5 rounded-3xl cursor-default group transition-all"
                   >
                     <div className="flex gap-4">
-                      <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-black text-slate-500 shrink-0 group-hover:bg-indigo-500 group-hover:text-white transition-colors">
-                        0{idx + 1}
+                      <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-black text-slate-500 shrink-0 group-hover:bg-indigo-500 group-hover:text-white transition-colors shadow-inner">
+                        {String(idx + 1).padStart(2, '0')}
                       </div>
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <h4 className="text-sm font-black text-white leading-tight uppercase tracking-tight">
+                      <div className="space-y-2 flex-1">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-sm font-black text-white leading-tight uppercase tracking-tight group-hover:text-indigo-400 transition-colors">
                             {idea.title}
                           </h4>
                           {idea.target && (
-                            <span className="text-[8px] text-slate-600 font-bold uppercase">{idea.target.split(' ')[0]}</span>
+                            <span className="px-2 py-0.5 bg-white/5 rounded text-[8px] text-slate-500 font-bold uppercase">{idea.target.split(' ')[0]}</span>
                           )}
                         </div>
-                        <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+                        <p className="text-[11px] text-slate-400 font-medium leading-relaxed">
                           {idea.concept}
                         </p>
-                        <div className="pt-2 flex items-center gap-2">
-                           <MapPin className="w-3 h-3 text-indigo-400" />
-                           <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">{idea.jejuConnection}</span>
+                        <div className="pt-2 flex items-center gap-4">
+                           <div className="flex items-center gap-1.5">
+                             <MapPin className="w-3 h-3 text-indigo-500" />
+                             <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">{idea.jejuConnection}</span>
+                           </div>
+                           <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                             <Clock className="w-3 h-3 text-indigo-400" />
+                             <span className="text-[9px] font-bold text-indigo-400 uppercase">{idea.timing || "NOW"}</span>
+                           </div>
                         </div>
                       </div>
                     </div>
@@ -505,6 +568,7 @@ export function ModernOverview({
             )}
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

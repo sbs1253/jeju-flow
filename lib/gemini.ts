@@ -135,6 +135,8 @@ export async function generateUnifiedInsight(
       1. 모든 인사이트는 위에서 명시한 '${targetAges}' 그룹의 라이프스타일과 취향에 맞춰져야 합니다. 
       2. 만약 타겟이 30대라면, 50대나 다른 연령대의 이야기는 배제하고 30대에게 매력적인 제주도 문화 기획안을 제시하세요.
       3. 제공된 데이터의 트렌드 변화율을 근거로 활용하세요.
+      4. **jeju_insights**는 반드시 6개에서 8개 사이의 구체적인 기획안을 생성하세요.
+      5. **trending_keywords**는 현재 트렌드를 반영하여 최소 10개 이상을 생성하세요.
     `;
 
     // ── 공식 가이드 규격 호출 ──
@@ -181,6 +183,12 @@ export async function generateUnifiedInsight(
 
   } catch (error: any) {
     console.error('Gemini API 분석 실패 상세:', error);
+    
+    // ── 할당량 초과(Rate Limit) 감지 ──
+    if (error.message?.includes('429') || error.status === 429) {
+      throw new Error('AI 분석 할당량이 초과되었습니다 (분당 15회). 잠시 후 다시 시도해 주세요.');
+    }
+    
     throw error;
   }
 }

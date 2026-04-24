@@ -8,6 +8,7 @@ import { NewspaperOverview } from "@/components/dashboard/NewspaperOverview";
 import { useTrends, usePerformances, useInsights, useArchive, TrendFilters, getFilterKey } from "@/hooks/use-dashboard-data";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 
 function LoadingState() {
   return (
@@ -26,6 +27,7 @@ export default function HomePage() {
   const { theme, resolvedTheme } = useTheme();
   const searchParams = useSearchParams();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const dateParam = searchParams.get("date");
   
   const [filters, setFilters] = useState<TrendFilters>({
@@ -97,10 +99,14 @@ export default function HomePage() {
         trending_keywords: data.trending_keywords,
         jeju_insights: data.jeju_insights
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
+      alert(error.message || "분석 중 오류가 발생했습니다.");
     } finally {
       setIsAnalyzing(false);
+      // 생성 직후 캐시 상태를 반영하기 위해 쿼리 무효화 및 데이터 새로고침
+      queryClient.invalidateQueries({ queryKey: ["insights"] });
+      router.refresh();
     }
   };
 

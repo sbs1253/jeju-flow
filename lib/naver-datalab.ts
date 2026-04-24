@@ -95,6 +95,18 @@ export async function fetchNaverTrends(
 
 const formatDate = (d: Date) => d.toISOString().split("T")[0];
 
+export const formatPeriod = (start: string, end: string) => {
+  if (!start || !end) return "Loading...";
+  const s = new Date(start);
+  const e = new Date(end);
+  // 연도가 다를 경우에만 연도 표시, 같은 연도면 월.일만 표시하여 가독성 향상
+  const showYear = s.getFullYear() !== e.getFullYear() || s.getFullYear() !== new Date().getFullYear();
+  if (showYear) {
+    return `${s.getFullYear()}.${s.getMonth() + 1}.${s.getDate()} ~ ${e.getFullYear()}.${e.getMonth() + 1}.${e.getDate()}`;
+  }
+  return `${s.getMonth() + 1}.${s.getDate()} ~ ${e.getMonth() + 1}.${e.getDate()}`;
+};
+
 export async function fetchRecentTrends(
   days = 30,
   timeUnit: NaverTrendRequest["timeUnit"] = "week",
@@ -102,8 +114,8 @@ export async function fetchRecentTrends(
 ): Promise<NaverTrendResponse> {
   const endDate = new Date();
   endDate.setDate(endDate.getDate() - 1);
-  const startDate = new Date();
-  startDate.setDate(endDate.getDate() - days);
+  const startDate = new Date(endDate); // 복사본 생성
+  startDate.setDate(startDate.getDate() - days + 1); // 정확한 일수 계산 (당일 포함)
 
   return fetchNaverTrends({
     startDate: formatDate(startDate),

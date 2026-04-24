@@ -107,18 +107,23 @@ export async function POST(request: NextRequest) {
 
     // ── 2. 데이터 전처리 ──
     const trendInput = chartData.results.map((r: any) => {
-      const ratios = r.data.map((d: any) => d.ratio);
-      const mid = Math.floor(ratios.length / 2);
-      const firstAvg = ratios.slice(0, mid).reduce((a: number, b: number) => a + b, 0) / (mid || 1);
-      const secondAvg = ratios.slice(mid).reduce((a: number, b: number) => a + b, 0) / (ratios.length - mid || 1);
+      const allRatios = r.data.map((d: any) => d.ratio);
+      const period = filters.period || 30;
+      
+      // 전체 데이터에서 '최근 days일'과 '그 이전 days일'을 분리하여 비교
+      const secondHalf = allRatios.slice(-period); // 최근 n일
+      const firstHalf = allRatios.slice(-(period * 2), -period); // 이전 n일
+      
+      const firstAvg = firstHalf.length > 0 ? firstHalf.reduce((a: number, b: number) => a + b, 0) / firstHalf.length : 0;
+      const secondAvg = secondHalf.length > 0 ? secondHalf.reduce((a: number, b: number) => a + b, 0) / secondHalf.length : 0;
       const changeRate = firstAvg === 0 ? 0 : ((secondAvg - firstAvg) / firstAvg) * 100;
 
       return {
         group: r.title,
         keywords: r.keywords,
         series: r.data,
-        avgRatio: Math.round(secondAvg * 10) / 10,
-        changeRate: Math.round(changeRate * 10) / 10,
+        avgRatio: Math.round(secondAvg * 10) / 10, // 현재 기간의 평균 수치
+        changeRate: Math.round(changeRate * 10) / 10, // 이전 기간 대비 변화율
         trend: changeRate > 5 ? "상승" : changeRate < -5 ? "하락" : "유지"
       };
     });
