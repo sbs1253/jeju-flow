@@ -26,7 +26,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/s
 import { Separator } from "@/components/ui/separator";
 
 const navItems = [
-  { href: "/", label: "오버뷰", icon: LayoutDashboard },
+  { href: "/", label: "검색 트렌드", icon: LayoutDashboard },
   { href: "/statistics", label: "공연·축제 통계", icon: BarChart3 },
   { href: "/setup", label: "셋업 가이드", icon: Settings },
 ];
@@ -107,7 +107,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
             <Palmtree className="w-4 h-4 text-white" />
           </div>
           <div>
-            <h1 className="text-sm font-bold tracking-tight">제주 컬처</h1>
+            <h1 className="text-sm font-bold tracking-tight">제주 플로우</h1>
             <p className="text-[10px] text-muted-foreground -mt-0.5">트렌드 대시보드</p>
           </div>
         </Link>
@@ -190,7 +190,7 @@ export default function DashboardLayout({
               <h2 className={cn(
                 "text-sm font-black tracking-tighter uppercase",
                 showNewspaperStyle ? "text-ink" : "text-foreground"
-              )}>Jeju Culture</h2>
+              )}>Jeju Flow</h2>
               <p className={cn(
                 "text-[10px] font-medium uppercase tracking-widest opacity-60",
                 showNewspaperStyle ? "text-ink" : "text-muted-foreground"
@@ -277,7 +277,7 @@ export default function DashboardLayout({
         <div className="lg:hidden sticky top-0 bg-background/80 backdrop-blur-md border-b border-border/40 p-4 flex items-center justify-between z-40">
           <Link href="/" className="flex items-center gap-2">
             <Palmtree className="text-jeju-ocean w-6 h-6" />
-            <span className="font-black tracking-tighter">JEJU CULTURE</span>
+            <span className="font-black tracking-tighter">JEJU FLOW</span>
           </Link>
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger
@@ -303,7 +303,7 @@ export default function DashboardLayout({
         <footer className="p-6 md:p-8 border-t border-border/40 relative z-10">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 opacity-50 hover:opacity-100 transition-opacity duration-300">
             <p className="text-[10px] md:text-xs text-muted-foreground">
-              © 2026 Jeju Culture Trend Dashboard. All rights reserved.
+              © 2026 Jeju Flow Trend Dashboard. All rights reserved.
             </p>
             <div className="flex items-center gap-2">
               <span className="text-[10px] md:text-xs text-muted-foreground">출처:</span>

@@ -30,17 +30,17 @@ export function KeywordRankCard({
             viewport={{ once: true }}
             whileHover={{ 
               x: 5,
-              backgroundColor: "rgba(99, 102, 241, 0.05)",
-              borderColor: "rgba(99, 102, 241, 0.2)"
+              backgroundColor: "var(--accent)",
+              borderColor: "var(--border)"
             }}
             transition={{ delay: idx * 0.05, duration: 0.3 }}
-            className="group flex items-center justify-between py-3.5 px-4 rounded-2xl border border-white/5 bg-white/[0.01] transition-all duration-300 cursor-default"
+            className="group flex items-center justify-between py-3.5 px-4 rounded-2xl border border-border bg-card/30 transition-all duration-300 cursor-default"
           >
             <div className="flex items-center gap-4">
-              <span className="text-[10px] font-black text-slate-700 group-hover:text-indigo-500 transition-colors w-4">
+              <span className="text-[10px] font-black text-muted-foreground/40 group-hover:text-indigo-500 transition-colors w-4">
                 {String(idx + 1).padStart(2, '0')}
               </span>
-              <span className="text-xs font-bold text-slate-400 group-hover:text-white transition-colors tracking-tight">
+              <span className="text-xs font-bold text-muted-foreground group-hover:text-foreground transition-colors tracking-tight">
                 {kw.keyword}
               </span>
             </div>
@@ -63,7 +63,7 @@ export function KeywordRankCard({
                 </div>
               )}
               {kw.direction === "stable" && (
-                <Minus className="w-3 h-3 text-slate-600" />
+                <Minus className="w-3 h-3 text-muted-foreground/40" />
               )}
             </div>
           </motion.div>

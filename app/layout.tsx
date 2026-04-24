@@ -19,10 +19,10 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "제주 문화·행사 트렌드 대시보드",
+  title: "Jeju Flow | 데이터 기반 제주 문화 트렌드 분석",
   description:
-    "전국 문화 콘텐츠 소비 트렌드를 분석하고, 제주 행사·공연·축제 기획에 적용하는 데이터 기반 분석 플랫폼",
-  keywords: ["제주", "문화", "트렌드", "공연", "축제", "데이터 분석", "대시보드"],
+    "제주 플로우(Jeju Flow) - 전국 문화 콘텐츠 소비 트렌드를 실시간으로 분석하고 타겟 맞춤형 기획안을 제안하는 지능형 데이터 대시보드",
+  keywords: ["제주플로우", "JejuFlow", "제주", "문화트렌드", "데이터분석", "대시보드", "AI인사이트"],
 };
 
 export default function RootLayout({

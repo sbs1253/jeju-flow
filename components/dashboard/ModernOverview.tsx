@@ -153,7 +153,7 @@ export function ModernOverview({
   };
 
   return (
-    <div className="space-y-10 pb-24 text-slate-200 relative">
+    <div className="space-y-10 pb-24 text-foreground relative">
       {/* ── Background Glow ── */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <motion.div 
@@ -178,7 +178,7 @@ export function ModernOverview({
 
       <div className="relative z-10 space-y-10">
       {/* ── Breaking News Ticker ── */}
-      <div className="w-full bg-slate-900/50 backdrop-blur-md border-y border-white/5 overflow-hidden py-3">
+      <div className="w-full bg-card/50 backdrop-blur-md border-y border-border/50 overflow-hidden py-3">
         <div className="max-w-[1400px] mx-auto px-6 flex items-center gap-6">
           <div className="flex items-center gap-2 shrink-0">
              <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
@@ -189,7 +189,7 @@ export function ModernOverview({
                 initial={{ x: "100%" }}
                 animate={{ x: "-100%" }}
                 transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-                className="whitespace-nowrap text-xs font-medium text-slate-400"
+                className="whitespace-nowrap text-xs font-medium text-muted-foreground"
              >
                 {summary?.headline || "실시간 트렌드 데이터 분석 중..."} • {isFiltered ? "타겟 맞춤형 기획안 생성 가능" : "전체 트렌드 분석"} • 기간: {formatPeriod(displayStartDate, displayEndDate)}
              </motion.p>
@@ -200,23 +200,23 @@ export function ModernOverview({
       {/* ── Dashboard Header & Interactive Filters ── */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-4">
         <div className="space-y-2">
-           <h2 className="text-3xl font-black tracking-tighter text-white uppercase">Radar Overview</h2>
+           <h2 className="text-3xl font-black tracking-tighter text-foreground uppercase">Radar Overview</h2>
            <div className="flex items-center gap-4">
-              <p className="text-sm text-slate-500 font-medium flex items-center gap-2">
+              <p className="text-sm text-muted-foreground font-medium flex items-center gap-2">
                 <Globe className="w-4 h-4 text-indigo-500" />
                 National Trend Intelligence
               </p>
-              <div className="h-4 w-px bg-white/10 hidden sm:block"></div>
+              <div className="h-4 w-px bg-border hidden sm:block"></div>
                <div className="flex items-center gap-2">
-                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest hidden sm:block">
+                 <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest hidden sm:block">
                     Period: {formatPeriod(displayStartDate, displayEndDate)}
                  </p>
                  <TooltipProvider>
                     <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Info className="w-3 h-3 text-slate-500 cursor-help hover:text-indigo-400 transition-colors" />
+                      <TooltipTrigger>
+                        <Info className="w-3 h-3 text-muted-foreground cursor-help hover:text-indigo-400 transition-colors" />
                       </TooltipTrigger>
-                      <TooltipContent side="top" className="bg-slate-900 border-white/10 text-[11px] p-2 max-w-[200px] text-slate-300">
+                      <TooltipContent side="top" className="bg-popover border-border text-[11px] p-2 max-w-[200px] text-popover-foreground">
                         추이 분석(MoM/WoW)을 위해 선택한 기간의 2배 데이터를 포함합니다.
                       </TooltipContent>
                     </Tooltip>
@@ -227,14 +227,14 @@ export function ModernOverview({
         
         <div className="flex flex-wrap items-center gap-3">
            {/* ── 연령대 선택기 (Age Selector) ── */}
-           <div className="flex gap-1 p-1 bg-slate-900/80 border border-white/5 rounded-2xl overflow-x-auto max-w-[300px] sm:max-w-none no-scrollbar">
+           <div className="flex gap-1 p-1 bg-muted/80 border border-border rounded-2xl overflow-x-auto max-w-[300px] sm:max-w-none no-scrollbar">
               {Object.entries(ageLabels).map(([val, label]) => (
                 <button
                   key={val}
                   onClick={() => toggleAge(val)}
                   className={cn(
                     "px-3 py-1.5 rounded-xl text-[10px] font-black transition-all whitespace-nowrap",
-                    filters.ages?.includes(val) ? "bg-white/10 text-white shadow-xl" : "text-slate-500 hover:text-slate-300"
+                    filters.ages?.includes(val) ? "bg-accent text-accent-foreground shadow-xl" : "text-muted-foreground hover:text-foreground"
                   )}
                 >
                   {label}
@@ -242,7 +242,7 @@ export function ModernOverview({
               ))}
            </div>
 
-           <div className="flex gap-1 p-1 bg-slate-900/80 border border-white/5 rounded-2xl">
+           <div className="flex gap-1 p-1 bg-muted/80 border border-border rounded-2xl">
               {[
                 { val: 7, label: "7D" },
                 { val: 14, label: "14D" },
@@ -254,7 +254,7 @@ export function ModernOverview({
                   onClick={() => updateFilter("period", p.val)}
                   className={cn(
                     "px-3 py-1.5 rounded-xl text-[10px] font-black transition-all uppercase tracking-tighter",
-                    filters.period === p.val ? "bg-white/10 text-white shadow-xl" : "text-slate-500 hover:text-slate-300"
+                    filters.period === p.val ? "bg-accent text-accent-foreground shadow-xl" : "text-muted-foreground hover:text-foreground"
                   )}
                 >
                   {p.label}
@@ -262,8 +262,8 @@ export function ModernOverview({
               ))}
            </div>
 
-           <div className="flex flex-wrap items-center gap-3 bg-slate-900/40 p-1.5 rounded-2xl border border-white/5">
-              <div className="flex gap-1 p-1 bg-white/5 rounded-xl border border-white/5">
+           <div className="flex flex-wrap items-center gap-3 bg-muted/40 p-1.5 rounded-2xl border border-border">
+              <div className="flex gap-1 p-1 bg-card rounded-xl border border-border">
                  {[
                    { id: undefined, label: "ALL", icon: Monitor },
                    { id: "pc", label: "PC", icon: Monitor },
@@ -274,7 +274,7 @@ export function ModernOverview({
                      onClick={() => updateFilter("device", d.id)}
                      className={cn(
                        "flex items-center gap-2 px-3 py-1 rounded-lg text-[10px] font-black transition-all",
-                       filters.device === d.id ? "bg-indigo-500 text-white shadow-lg" : "text-slate-500 hover:text-slate-300"
+                       filters.device === d.id ? "bg-indigo-500 text-white shadow-lg" : "text-muted-foreground hover:text-foreground"
                      )}
                    >
                      <d.icon className="w-3 h-3" />
@@ -283,7 +283,7 @@ export function ModernOverview({
                  ))}
               </div>
 
-              <div className="flex gap-1 p-1 bg-white/5 rounded-xl border border-white/5">
+              <div className="flex gap-1 p-1 bg-card rounded-xl border border-border">
                  {[
                    { id: undefined, label: "ALL", icon: Users },
                    { id: "m", label: "M", icon: User },
@@ -294,7 +294,7 @@ export function ModernOverview({
                      onClick={() => updateFilter("gender", g.id)}
                      className={cn(
                        "flex items-center gap-2 px-3 py-1 rounded-lg text-[10px] font-black transition-all",
-                       filters.gender === g.id ? "bg-indigo-500 text-white shadow-lg" : "text-slate-500 hover:text-slate-300"
+                       filters.gender === g.id ? "bg-indigo-500 text-white shadow-lg" : "text-muted-foreground hover:text-foreground"
                      )}
                    >
                      <g.icon className="w-3 h-3" />
@@ -336,44 +336,44 @@ export function ModernOverview({
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-[2.5rem] bg-[#020617] border border-white/5 shadow-2xl"
+        className="relative overflow-hidden rounded-[2.5rem] bg-card border border-border shadow-2xl"
       >
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent"></div>
         <div className="relative z-10 p-12 md:p-16 flex flex-col xl:flex-row items-center justify-between gap-12">
           <div className="space-y-8 text-center md:text-left max-w-2xl">
             <div className="space-y-4">
-              <h1 className="text-5xl md:text-8xl font-black text-white tracking-tighter leading-[0.8] uppercase">
+              <h1 className="text-5xl md:text-8xl font-black text-foreground tracking-tighter leading-[0.8] uppercase">
                 Culture <br />
                 <span className="text-indigo-500">Intelligence</span>
               </h1>
-              <p className="text-slate-400 text-lg md:text-xl font-medium leading-relaxed max-w-xl">
+              <p className="text-muted-foreground text-lg md:text-xl font-medium leading-relaxed max-w-xl">
                  {isFiltered ? "선택하신 타겟 그룹에 최적화된 초정밀 문화 분석을 제공합니다." : "국가 공공 데이터와 AI가 결합된 초정밀 문화 인사이트. 실시간 트렌드 레이더."}
               </p>
             </div>
             
             <div className="flex flex-wrap items-center gap-4 justify-center md:justify-start">
-              <div className="flex items-center gap-2 text-slate-300 bg-white/5 px-6 py-3 rounded-2xl border border-white/5">
+              <div className="flex items-center gap-2 text-foreground bg-muted px-6 py-3 rounded-2xl border border-border">
                 <Calendar className="w-4 h-4 text-indigo-400" />
                 <span className="text-xs font-black uppercase tracking-tighter">{today}</span>
               </div>
-              <div className="flex items-center gap-2 text-slate-400 bg-white/5 px-6 py-3 rounded-2xl border border-white/5">
+              <div className="flex items-center gap-2 text-muted-foreground bg-muted px-6 py-3 rounded-2xl border border-border">
                 <Target className="w-4 h-4 text-indigo-400" />
                 <span className="text-[10px] font-black uppercase tracking-[0.2em]">Target-Specific Mode</span>
               </div>
             </div>
           </div>
 
-          <div className="bg-slate-900/80 backdrop-blur-2xl border border-white/10 p-10 rounded-[2.5rem] w-full md:w-[420px] shadow-2xl relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+          <div className="bg-card backdrop-blur-2xl border border-border p-10 rounded-[2.5rem] w-full md:w-[420px] shadow-2xl relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
             <div className="relative space-y-8">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-indigo-500/20 flex items-center justify-center border border-indigo-500/20">
+                  <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20">
                     <Sparkles className="text-indigo-400 w-7 h-7" />
                   </div>
                   <div>
-                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">GEMINI 3.1 FLASH LITE</p>
-                    <p className="text-xl font-black text-white uppercase tracking-tighter">
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">GEMINI 3.1 FLASH LITE</p>
+                    <p className="text-xl font-black text-foreground uppercase tracking-tighter">
                        {summary?.risingGroups?.[0] || "READY"}
                     </p>
                   </div>
@@ -382,10 +382,10 @@ export function ModernOverview({
               
               <div className="space-y-3">
                  <div className="flex justify-between items-end">
-                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Processing Status</span>
+                    <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Processing Status</span>
                     <span className="text-sm font-black text-indigo-400">ACTIVE</span>
                  </div>
-                 <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                 <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
                    <motion.div 
                       initial={{ width: 0 }}
                       animate={{ width: "100%" }}
@@ -446,9 +446,9 @@ export function ModernOverview({
             <div className="flex items-center justify-between px-4">
               <div className="flex items-center gap-3">
                  <div className="w-1.5 h-6 bg-indigo-500 rounded-full"></div>
-                 <h3 className="text-sm font-black uppercase tracking-[0.2em] text-slate-500">Trend Report</h3>
+                 <h3 className="text-sm font-black uppercase tracking-[0.2em] text-muted-foreground">Trend Report</h3>
               </div>
-              <div className="flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+              <div className="flex items-center gap-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                  {isCached ? (
                    <span className="flex items-center gap-1.5 text-emerald-500"><CheckCircle2 className="w-3 h-3" /> Cached Summary</span>
                  ) : (
@@ -464,13 +464,13 @@ export function ModernOverview({
                 delay={0.2}
               />
             ) : (
-              <div className="group relative p-12 bg-slate-900/20 border-2 border-dashed border-white/5 rounded-[3rem] text-center overflow-hidden">
+              <div className="group relative p-12 bg-muted/20 border-2 border-dashed border-border rounded-[3rem] text-center overflow-hidden">
                 <div className="relative z-10 space-y-4">
-                   <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6">
-                      <BrainCircuit className="w-8 h-8 text-slate-600" />
+                   <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
+                      <BrainCircuit className="w-8 h-8 text-muted-foreground" />
                    </div>
-                   <h4 className="text-xl font-black text-slate-400 uppercase tracking-tight">Target Analysis Needed</h4>
-                   <p className="text-xs text-slate-600 font-medium max-w-xs mx-auto uppercase tracking-widest leading-loose">
+                   <h4 className="text-xl font-black text-muted-foreground uppercase tracking-tight">Target Analysis Needed</h4>
+                   <p className="text-xs text-muted-foreground font-medium max-w-xs mx-auto uppercase tracking-widest leading-loose">
                       Selected filter combination has no cached report. 
                       Click "Analyze Trends" for target-specific insights.
                    </p>
@@ -479,12 +479,12 @@ export function ModernOverview({
             )}
           </div>
 
-          <div className="p-10 bg-[#09090b] border border-white/5 rounded-[3rem] shadow-2xl relative overflow-hidden group">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500/0 via-indigo-500/50 to-indigo-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-            <div className="w-full h-[400px]">
-              <TrendLineChart data={trends?.results} />
+            <div className="p-10 bg-card border border-border rounded-[3rem] shadow-2xl relative overflow-hidden group min-h-[400px]">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500/0 via-indigo-500/50 to-indigo-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+              <div className="w-full h-[400px]">
+                <TrendLineChart data={trends?.results} />
+              </div>
             </div>
-          </div>
         </div>
 
         <div className="lg:col-span-4 space-y-10">
@@ -492,7 +492,7 @@ export function ModernOverview({
             <div className="flex items-center justify-between px-4">
               <div className="flex items-center gap-3">
                 <Lightbulb className="w-5 h-5 text-indigo-400" />
-                <h3 className="text-sm font-black uppercase tracking-[0.2em] text-slate-500">Target Strategy</h3>
+                <h3 className="text-sm font-black uppercase tracking-[0.2em] text-muted-foreground">Target Strategy</h3>
               </div>
               {isFiltered && jejuInsights.length > 0 && (
                 <div className="px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-full text-[8px] font-black text-indigo-400 uppercase tracking-tighter">
@@ -509,33 +509,40 @@ export function ModernOverview({
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true }}
                     whileHover={{ 
-                      scale: 1.02, 
-                      backgroundColor: "rgba(99, 102, 241, 0.05)",
-                      borderColor: "rgba(99, 102, 241, 0.3)" 
+                      y: -4, 
+                      backgroundColor: "var(--accent)",
+                      borderColor: "var(--border)" 
                     }}
-                    transition={{ delay: idx * 0.1, type: "spring", stiffness: 100 }}
-                    className="p-6 bg-slate-900/50 border border-white/5 rounded-3xl cursor-default group transition-all"
+                    transition={{ 
+                      delay: idx * 0.05, 
+                      duration: 0.3,
+                      ease: "easeOut"
+                    }}
+                    className="p-6 bg-card border border-border rounded-3xl cursor-default group"
                   >
                     <div className="flex gap-4">
-                      <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-black text-slate-500 shrink-0 group-hover:bg-indigo-500 group-hover:text-white transition-colors shadow-inner">
+                      <motion.div 
+                        transition={{ duration: 0.3 }}
+                        className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-[10px] font-black text-muted-foreground shrink-0 group-hover:bg-indigo-500 group-hover:text-white shadow-inner"
+                      >
                         {String(idx + 1).padStart(2, '0')}
-                      </div>
+                      </motion.div>
                       <div className="space-y-2 flex-1">
                         <div className="flex items-center justify-between">
-                          <h4 className="text-sm font-black text-white leading-tight uppercase tracking-tight group-hover:text-indigo-400 transition-colors">
+                          <h4 className="text-sm font-black text-foreground leading-tight uppercase tracking-tight group-hover:text-indigo-400 transition-colors">
                             {idea.title}
                           </h4>
                           {idea.target && (
-                            <span className="px-2 py-0.5 bg-white/5 rounded text-[8px] text-slate-500 font-bold uppercase">{idea.target.split(' ')[0]}</span>
+                            <span className="px-2 py-0.5 bg-muted rounded text-[8px] text-muted-foreground font-bold uppercase">{idea.target.split(' ')[0]}</span>
                           )}
                         </div>
-                        <p className="text-[11px] text-slate-400 font-medium leading-relaxed">
+                        <p className="text-[11px] text-muted-foreground font-medium leading-relaxed">
                           {idea.concept}
                         </p>
                         <div className="pt-2 flex items-center gap-4">
                            <div className="flex items-center gap-1.5">
                              <MapPin className="w-3 h-3 text-indigo-500" />
-                             <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">{idea.jejuConnection}</span>
+                             <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-tighter">{idea.jejuConnection}</span>
                            </div>
                            <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                              <Clock className="w-3 h-3 text-indigo-400" />
@@ -547,8 +554,8 @@ export function ModernOverview({
                   </motion.div>
                 ))
               ) : (
-                <div className="p-10 bg-slate-900/20 border-2 border-dashed border-white/5 rounded-[2.5rem] text-center opacity-50">
-                   <p className="text-[10px] font-black text-slate-600 tracking-widest uppercase">Awaiting Target Analysis</p>
+                <div className="p-10 bg-muted/20 border-2 border-dashed border-border rounded-[2.5rem] text-center opacity-50">
+                   <p className="text-[10px] font-black text-muted-foreground tracking-widest uppercase">Awaiting Target Analysis</p>
                 </div>
               )}
             </div>
@@ -557,13 +564,13 @@ export function ModernOverview({
           <div className="space-y-6">
             <div className="flex items-center gap-3 px-4">
               <TrendingUp className="w-5 h-5 text-indigo-400" />
-              <h3 className="text-sm font-black uppercase tracking-[0.2em] text-slate-500">Trending Now</h3>
+              <h3 className="text-sm font-black uppercase tracking-[0.2em] text-muted-foreground">Trending Now</h3>
             </div>
             {trendingKeywords.length > 0 ? (
               <KeywordRankCard keywords={trendingKeywords} />
             ) : (
-              <div className="p-10 bg-slate-900/20 border-2 border-dashed border-white/5 rounded-[2.5rem] text-center opacity-50">
-                 <p className="text-[10px] font-black text-slate-600 tracking-widest uppercase">No Data</p>
+              <div className="p-10 bg-muted/20 border-2 border-dashed border-border rounded-[2.5rem] text-center opacity-50">
+                 <p className="text-[10px] font-black text-muted-foreground tracking-widest uppercase">No Data</p>
               </div>
             )}
           </div>

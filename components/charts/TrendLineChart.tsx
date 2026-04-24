@@ -52,29 +52,30 @@ export function TrendLineChart({
     return point;
   }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()); // 날짜순 정렬 보장
 
-  const INK_COLORS = [
-    "#1a3a3a", // Deep Teal Ink
-    "#5a2a2a", // Deep Maroon Ink
-    "#2a3a5a", // Deep Navy Ink
-    "#3a4a2a", // Deep Forest Ink
-    "#5a4a1a", // Deep Sepia Ink
+  const TREND_COLORS = [
+    "#6366f1", // Indigo
+    "#0ea5e9", // Sky
+    "#f43f5e", // Rose
+    "#10b981", // Emerald
+    "#f59e0b", // Amber
   ];
 
   return (
-    <div className="h-full w-full bg-transparent min-h-[300px]">
-      <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+    <div className="h-[400px] w-full bg-transparent min-h-[400px]">
+      <ResponsiveContainer width="100%" height="100%">
         <LineChart
           data={mergedData}
           margin={{ top: 20, right: 30, left: 10, bottom: 20 }}
         >
           <CartesianGrid
             strokeDasharray="3 3"
-            stroke="#14141415"
+            stroke="currentColor"
+            className="opacity-5"
             vertical={false}
           />
           <XAxis
             dataKey="displayDate"
-            tick={{ fontSize: 10, fill: "#14141480", fontWeight: "bold" }}
+            tick={{ fontSize: 10, fill: "currentColor", fontWeight: "bold", opacity: 0.5 }}
             tickLine={false}
             axisLine={false}
             interval="preserveStartEnd"
@@ -82,19 +83,20 @@ export function TrendLineChart({
             dy={10}
           />
           <YAxis
-            tick={{ fontSize: 10, fill: "#14141480", fontWeight: "bold" }}
+            tick={{ fontSize: 10, fill: "currentColor", fontWeight: "bold", opacity: 0.5 }}
             tickLine={false}
             axisLine={false}
             domain={[0, 100]}
           />
           <Tooltip
             contentStyle={{
-              backgroundColor: "#c4beaf",
-              border: "1px solid #14141420",
-              borderRadius: "0px",
+              backgroundColor: "var(--popover)",
+              border: "1px solid var(--border)",
+              borderRadius: "1rem",
               fontSize: "12px",
-              color: "#141414",
-              boxShadow: "none",
+              color: "var(--popover-foreground)",
+              boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
+              backdropFilter: "blur(8px)",
             }}
             itemStyle={{ fontWeight: "bold" }}
           />
@@ -113,8 +115,8 @@ export function TrendLineChart({
               key={series.title}
               type="monotone"
               dataKey={series.title}
-              stroke={INK_COLORS[idx % INK_COLORS.length]}
-              strokeWidth={2.5}
+              stroke={TREND_COLORS[idx % TREND_COLORS.length]}
+              strokeWidth={3}
               dot={false}
               activeDot={{ r: 4, strokeWidth: 0 }}
               isAnimationActive={true}
