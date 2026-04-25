@@ -8,6 +8,40 @@ import sampleTrends from "@/data/sample/trends.json";
 
 const USE_SAMPLE = process.env.USE_SAMPLE_DATA === "true";
 
+export async function POST(request: NextRequest) {
+  try {
+    const { fetchRecentTrends } = await import("@/lib/naver-datalab");
+    const { createServerSupabaseClient } = await import("@/lib/supabase");
+    const supabase = createServerSupabaseClient();
+
+    const days = 30;
+    const trendData = await fetchRecentTrends(days * 2, "date");
+
+    const timestamp = new Date().toISOString();
+    const insertRows = trendData.results.flatMap(result => 
+      result.data.map(d => ({
+        keyword_group: result.title,
+        keyword: result.keywords.join(", "),
+        period_start: d.period,
+        period_end: d.period,
+        ratio: d.ratio,
+        filter_key: "all_all_all_30",
+        collected_at: timestamp
+      }))
+    );
+
+    if (insertRows.length > 0) {
+      const { error: insertError } = await supabase.from("search_trends").insert(insertRows);
+      if (insertError) throw insertError;
+    }
+
+    return NextResponse.json({ success: true, count: insertRows.length });
+  } catch (error) {
+    console.error("[API] Trends POST error:", error);
+    return NextResponse.json({ error: "Failed to collect trends" }, { status: 500 });
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);

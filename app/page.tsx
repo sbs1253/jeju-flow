@@ -5,7 +5,7 @@ import { useTheme } from "next-themes";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { ModernOverview } from "@/components/dashboard/ModernOverview";
 import { NewspaperOverview } from "@/components/dashboard/NewspaperOverview";
-import { useTrends, usePerformances, useInsights, useArchive, TrendFilters, getFilterKey } from "@/hooks/use-dashboard-data";
+import { useTrends, usePerformances, useInsights, TrendFilters, getFilterKey } from "@/hooks/use-dashboard-data";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";

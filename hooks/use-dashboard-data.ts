@@ -52,11 +52,13 @@ export function useTrends(filters?: TrendFilters) {
   });
 }
 
-export function usePerformances() {
+export function usePerformances(region: string = "all") {
   return useQuery({
-    queryKey: ["performances"],
+    queryKey: ["performances", region],
     queryFn: async () => {
-      const res = await fetch("/api/performances");
+      const params = new URLSearchParams();
+      if (region !== "all") params.append("region", region);
+      const res = await fetch(`/api/performances?${params.toString()}`);
       if (!res.ok) throw new Error("Failed to fetch performances");
       return res.json();
     },

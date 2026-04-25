@@ -19,6 +19,7 @@ import {
   Newspaper,
   MapPin,
 } from "lucide-react";
+import { DevCollectButton } from "@/components/dev/DevCollectButton";
 import { useTheme } from "next-themes";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -146,6 +147,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 }
 
 
+
 export default function DashboardLayout({
   children,
 }: {
@@ -267,6 +269,11 @@ export default function DashboardLayout({
 
       {/* Main Content Area */}
       <main className="lg:ml-64 min-h-screen relative flex flex-col flex-1 overflow-auto">
+        {/* Development Data Collection Button */}
+        <div className="fixed top-6 right-6 z-[60] flex gap-2">
+          <DevCollectButton />
+        </div>
+
         {/* Subtle background glow effects */}
         <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
           <div className="absolute top-[-10%] right-[-5%] w-[40%] h-[40%] rounded-full bg-jeju-ocean/5 blur-[120px]" />

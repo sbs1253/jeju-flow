@@ -120,23 +120,27 @@ export async function generateUnifiedInsight(
     const targetGender = persona.gender === "m" ? "남성" : persona.gender === "f" ? "여성" : "전체 성별";
     const targetDevice = persona.device === "pc" ? "PC" : persona.device === "mo" ? "모바일" : "모든 기기";
 
+    const performanceContext = performanceData 
+      ? `\n[실제 공연 현황]\n- 전체 건수: ${performanceData.stats.total}\n- 제주 건수: ${performanceData.stats.jejuCount}\n- 주요 장르: ${Object.entries(performanceData.stats.byGenre).map(([g, c]) => `${g}(${c})`).join(', ')}`
+      : "";
+
     const prompt = `
-      당신은 제주도 문화 기획 전문가입니다. 다음 데이터를 바탕으로 **반드시 선택된 타겟 그룹에 집중한** 분석 리포트를 작성하세요.
+      당신은 제주도 문화 기획 및 데이터 분석 전문가입니다. 다음 **네이버 검색 트렌드(수요)**와 **KOPIS 공연 현황(공급)** 데이터를 융합 분석하여 리포트를 작성하세요.
       
       [현재 필터링 타겟]
-      - 연령대: ${targetAges}
-      - 성별: ${targetGender}
-      - 접속 기기: ${targetDevice}
+      - 연령대: ${targetAges} | 성별: ${targetGender} | 기기: ${targetDevice}
       
-      [데이터 컨텍스트]
+      [검색 트렌드 데이터]
       ${dataContext}
       
+      ${performanceContext}
+      
       [작성 지침]
-      1. 모든 인사이트는 위에서 명시한 '${targetAges}' 그룹의 라이프스타일과 취향에 맞춰져야 합니다. 
-      2. 만약 타겟이 30대라면, 50대나 다른 연령대의 이야기는 배제하고 30대에게 매력적인 제주도 문화 기획안을 제시하세요.
-      3. 제공된 데이터의 트렌드 변화율을 근거로 활용하세요.
-      4. **jeju_insights**는 반드시 6개에서 8개 사이의 구체적인 기획안을 생성하세요.
-      5. **trending_keywords**는 현재 트렌드를 반영하여 최소 10개 이상을 생성하세요.
+      1. **수요-공급 격차 분석**: 사람들이 많이 검색하는 테마(수요)와 실제 진행 중인 공연(공급)을 비교하여, 현재 부족한 기획이나 유망한 분야를 짚어주세요.
+      2. 모든 인사이트는 위에서 명시한 '${targetAges}' 그룹의 라이프스타일에 맞춤화되어야 합니다.
+      3. **jeju_insights**: 검색 트렌드와 실제 공연 데이터를 매칭한 구체적인 문화 기획 아이디어를 6-8개 제안하세요. 각 아이디어는 '왜 지금 이 트렌드에 필요한지' 근거를 포함해야 합니다.
+      4. **trending_keywords**: 현재 트렌드와 연관된 공연/문화 키워드 10개 이상을 생성하세요.
+      5. 실현 가능한 수준의 전문적인 톤을 유지하세요.
     `;
 
     // ── 공식 가이드 규격 호출 ──
