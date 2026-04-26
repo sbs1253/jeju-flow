@@ -14,8 +14,6 @@
 네이버 데이터랩 API를 활용하여 제주 문화 관련 주요 키워드(공연, 축제, 전시 등)의 검색량 변화 추이를 추적하고 시각화합니다.
 
 ### 🤖 AI 인사이트 자동 생성
-![AI Insights 1](./public/img/trend_analysis_1.png)
-![AI Insights 2](./public/img/trend_analysis_2.png)
 수집된 검색 트렌드와 공연 데이터를 바탕으로 **Google Gemini AI**가 수요-공급 격차를 분석하고 창의적인 문화 행사 기획 아이디어를 제안합니다.
 
 ### 🎭 공연/축제 정보 심층 동기화
