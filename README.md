@@ -1,4 +1,5 @@
 # 🌴 Jeju Flow (제주 문화 트렌드 대시보드)
+### 🌐 [프로젝트 사이트](https://jeju-flow.vercel.app)
 
 ![Jeju Flow Hero](./public/img/hero_dashboard.png)
 
