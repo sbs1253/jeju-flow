@@ -21,50 +21,79 @@ export async function POST(request: NextRequest) {
       Authorization: `Bearer ${cronSecret}`,
     };
 
-    const results: Record<string, unknown> = {};
+    const startTime = Date.now();
+    const results: Record<string, any> = {};
 
     // 1. 네이버 DataLab 트렌드 수집
+    const trendStart = Date.now();
     try {
       const trendRes = await fetch(`${baseUrl}/api/trends`, {
         method: "POST",
         headers,
       });
-      results.trends = await trendRes.json();
+      const data = await trendRes.json();
+      results.trends = {
+        success: data.success,
+        count: data.count || 0,
+        groupCounts: data.groupCounts || {},
+        duration: `${Date.now() - trendStart}ms`
+      };
     } catch (e) {
-      results.trends = { error: String(e) };
+      results.trends = { success: false, error: String(e), duration: `${Date.now() - trendStart}ms` };
     }
 
     // 2. KOPIS 공연 데이터 수집
+    const perfStart = Date.now();
     try {
       const perfRes = await fetch(`${baseUrl}/api/performances`, {
         method: "POST",
         headers,
       });
-      results.performances = await perfRes.json();
+      const data = await perfRes.json();
+      results.performances = {
+        success: data.success,
+        count: data.count || 0,
+        jejuCount: data.regionBreakdown?.["제주"] || 0,
+        duration: `${Date.now() - perfStart}ms`
+      };
     } catch (e) {
-      results.performances = { error: String(e) };
+      results.performances = { success: false, error: String(e), duration: `${Date.now() - perfStart}ms` };
     }
 
     // 3. Gemini 인사이트 생성
+    const insightStart = Date.now();
     try {
       const insightRes = await fetch(`${baseUrl}/api/insights`, {
         method: "POST",
         headers,
       });
-      results.insights = await insightRes.json();
+      const data = await insightRes.json();
+      results.insights = {
+        success: data.success,
+        types: data.types || [],
+        duration: `${Date.now() - insightStart}ms`
+      };
     } catch (e) {
-      results.insights = { error: String(e) };
+      results.insights = { success: false, error: String(e), duration: `${Date.now() - insightStart}ms` };
     }
 
+    const totalDuration = Date.now() - startTime;
+
     return NextResponse.json({
-      success: true,
+      success: Object.values(results).every((r: any) => r.success),
       timestamp: new Date().toISOString(),
-      results,
+      duration: `${totalDuration}ms`,
+      summary: {
+        trends: results.trends.success ? `${results.trends.count} keywords collected` : "Failed",
+        performances: results.performances.success ? `${results.performances.count} events updated (${results.performances.jejuCount} in Jeju)` : "Failed",
+        insights: results.insights.success ? "AI Insights regenerated" : "Failed",
+      },
+      details: results,
     });
   } catch (error) {
     console.error("Cron collection error:", error);
     return NextResponse.json(
-      { error: "Cron collection failed", details: String(error) },
+      { success: false, error: "Cron collection failed", details: String(error) },
       { status: 500 }
     );
   }

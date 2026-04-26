@@ -29,15 +29,30 @@ export async function POST(request: NextRequest) {
       }))
     );
 
+    const groupCounts: Record<string, number> = {};
     if (insertRows.length > 0) {
       const { error: insertError } = await supabase.from("search_trends").insert(insertRows);
       if (insertError) throw insertError;
+
+      // 그룹별 개수 계산
+      insertRows.forEach(row => {
+        groupCounts[row.keyword_group] = (groupCounts[row.keyword_group] || 0) + 1;
+      });
     }
 
-    return NextResponse.json({ success: true, count: insertRows.length });
+    return NextResponse.json({ 
+      success: true, 
+      count: insertRows.length,
+      groupCounts,
+      collected_at: timestamp
+    });
   } catch (error) {
     console.error("[API] Trends POST error:", error);
-    return NextResponse.json({ error: "Failed to collect trends" }, { status: 500 });
+    return NextResponse.json({ 
+      success: false, 
+      error: "Failed to collect trends",
+      details: String(error)
+    }, { status: 500 });
   }
 }
 

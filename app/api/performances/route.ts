@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Performance collection error:", error);
     return NextResponse.json(
-      { error: "Failed to collect performances", details: String(error) },
+      { success: false, error: "Failed to collect performances", details: String(error) },
       { status: 500 }
     );
   }

@@ -201,6 +201,9 @@ export async function POST(request: NextRequest) {
 
   } catch (error: any) {
     console.error("Unified Insight error:", error);
-    return NextResponse.json({ error: error.message || "분석 중 오류가 발생했습니다." }, { status: 500 });
+    return NextResponse.json({ 
+      success: false, 
+      error: error.message || "분석 중 오류가 발생했습니다." 
+    }, { status: 500 });
   }
 }

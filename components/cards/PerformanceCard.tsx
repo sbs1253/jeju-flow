@@ -90,7 +90,7 @@ export function PerformanceCard({ performance }: PerformanceCardProps) {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95 }}
         whileHover={{ y: -5 }}
-        className="group relative flex flex-col h-full bg-card border border-border/50 rounded-2xl transition-all duration-300 hover:shadow-2xl hover:shadow-primary/5"
+        className="group relative flex flex-col h-full bg-card border border-border/50 rounded-2xl transition-all duration-300 hover:shadow-2xl hover:shadow-primary/5 hover:z-[50]"
       >
         {/* Poster Preview on Title Hover */}
         <AnimatePresence>
