@@ -14,12 +14,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
-                    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+    // baseUrl 결정 로직 개선
+    let baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+    if (!baseUrl && process.env.VERCEL_URL) {
+      baseUrl = `https://${process.env.VERCEL_URL}`;
+    }
+    if (!baseUrl) {
+      baseUrl = "http://localhost:3000";
+    }
+
     const headers = {
       "Content-Type": "application/json",
       Authorization: `Bearer ${cronSecret}`,
     };
+
+    console.log(`[Cron] Triggering internal APIs at: ${baseUrl}`);
+    console.log(`[Cron] Auth header present: ${!!authHeader}`);
 
     const startTime = Date.now();
     const results: Record<string, any> = {};
@@ -32,6 +42,13 @@ export async function POST(request: NextRequest) {
         method: "POST",
         headers,
       });
+      
+      if (!trendRes.ok) {
+        const text = await trendRes.text();
+        console.error(`[Cron] Trends API failed (${trendRes.status}):`, text.slice(0, 500));
+        throw new Error(`API returned ${trendRes.status}`);
+      }
+      
       const data = await trendRes.json();
       results.trends = {
         success: data.success,
@@ -51,6 +68,13 @@ export async function POST(request: NextRequest) {
         method: "POST",
         headers,
       });
+
+      if (!perfRes.ok) {
+        const text = await perfRes.text();
+        console.error(`[Cron] Performances API failed (${perfRes.status}):`, text.slice(0, 500));
+        throw new Error(`API returned ${perfRes.status}`);
+      }
+
       const data = await perfRes.json();
       results.performances = {
         success: data.success,
@@ -70,6 +94,13 @@ export async function POST(request: NextRequest) {
         method: "POST",
         headers,
       });
+
+      if (!insightRes.ok) {
+        const text = await insightRes.text();
+        console.error(`[Cron] Insights API failed (${insightRes.status}):`, text.slice(0, 500));
+        throw new Error(`API returned ${insightRes.status}`);
+      }
+
       const data = await insightRes.json();
       results.insights = {
         success: data.success,

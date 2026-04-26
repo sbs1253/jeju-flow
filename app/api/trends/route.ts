@@ -8,9 +8,15 @@ import { createServerSupabaseClient } from "@/lib/supabase";
 import sampleTrends from "@/data/sample/trends.json";
 
 const USE_SAMPLE = process.env.USE_SAMPLE_DATA === "true";
-
 export async function POST(request: NextRequest) {
   try {
+    const authHeader = request.headers.get("authorization");
+    const cronSecret = process.env.CRON_SECRET;
+
+    if (process.env.NODE_ENV !== "development" && cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const supabase = createServerSupabaseClient();
 
     const days = 30;

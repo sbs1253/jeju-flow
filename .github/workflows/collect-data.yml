@@ -12,9 +12,17 @@ jobs:
     steps:
       - name: Trigger data collection
         id: collect
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
-          response=$(curl -s -L -f -w "\n%{http_code}" -X POST "${{ secrets.APP_URL }}/api/cron/collect" \
-            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+          if [ -z "$APP_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "::error::Missing secrets APP_URL or CRON_SECRET"
+            exit 1
+          fi
+          
+          response=$(curl -s -L -w "\n%{http_code}" -X POST "${APP_URL%/}/api/cron/collect" \
+            -H "Authorization: Bearer $CRON_SECRET" \
             -H "Content-Type: application/json")
           
           http_code=$(echo "$response" | tail -1)
@@ -23,24 +31,22 @@ jobs:
           echo "Status: $http_code"
           echo "Response: $body"
           
-          # 내부 success 필드가 false이면 에러로 간주
+          # 내부 success 필드 체크
           success=$(echo "$body" | jq -r '.success // false')
           if [ "$success" != "true" ]; then
-            echo "::error::Internal collection failed"
+            echo "::error::Internal collection failed. Check Vercel logs for details."
             exit 1
           fi
 
       - name: Summary
         if: always()
         run: |
-          body='${{ steps.collect.outputs.body }}' # 실제로는 위 step에서 output으로 빼야함
-          # 간단하게 로그 출력을 summary로 이동
           {
             echo "## ⏱️ Scheduled Data Collection Summary"
             echo ""
             echo "- Timestamp: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
             echo "- Endpoint: ${{ secrets.APP_URL }}/api/cron/collect"
-            echo "- Status: ${{ steps.collect.conclusion }}"
+            echo "- Job Status: ${{ job.status }}"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Log success
