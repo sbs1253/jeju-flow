@@ -27,7 +27,8 @@ export async function POST(request: NextRequest) {
     // 1. 네이버 DataLab 트렌드 수집
     const trendStart = Date.now();
     try {
-      const trendRes = await fetch(`${baseUrl}/api/trends`, {
+      const trendUrl = new URL("/api/trends", baseUrl).toString();
+      const trendRes = await fetch(trendUrl, {
         method: "POST",
         headers,
       });
@@ -45,7 +46,8 @@ export async function POST(request: NextRequest) {
     // 2. KOPIS 공연 데이터 수집
     const perfStart = Date.now();
     try {
-      const perfRes = await fetch(`${baseUrl}/api/performances`, {
+      const perfUrl = new URL("/api/performances", baseUrl).toString();
+      const perfRes = await fetch(perfUrl, {
         method: "POST",
         headers,
       });
@@ -63,7 +65,8 @@ export async function POST(request: NextRequest) {
     // 3. Gemini 인사이트 생성
     const insightStart = Date.now();
     try {
-      const insightRes = await fetch(`${baseUrl}/api/insights`, {
+      const insightUrl = new URL("/api/insights", baseUrl).toString();
+      const insightRes = await fetch(insightUrl, {
         method: "POST",
         headers,
       });
