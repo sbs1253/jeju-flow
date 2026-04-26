@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createServerSupabaseClient } from "@/lib/supabase";
 import sampleInsights from "@/data/sample/insights.json";
 
 export async function GET(request: NextRequest) {
@@ -7,7 +8,6 @@ export async function GET(request: NextRequest) {
     const date = searchParams.get("date");
     const filterKey = searchParams.get("filter_key");
 
-    const { createServerSupabaseClient } = await import("@/lib/supabase");
     const supabase = createServerSupabaseClient();
 
     // ── 1. 필터 기반 캐시 조회 ──
@@ -73,15 +73,13 @@ export async function POST(request: NextRequest) {
     }
 
     const { generateUnifiedInsight } = await import("@/lib/gemini");
-    const { createServerSupabaseClient } = await import("@/lib/supabase");
     const supabase = createServerSupabaseClient();
 
     // ── 1. DB 캐시 확인 (중복 생성 방지) ──
-    if (supabase) {
-      const todayStart = new Date();
-      todayStart.setHours(0, 0, 0, 0);
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
 
-      const { data: existingCache } = await supabase
+    const { data: existingCache } = await supabase
         .from("ai_insights")
         .select("*")
         .eq("filter_key", filterKey)
@@ -103,7 +101,6 @@ export async function POST(request: NextRequest) {
           is_cached: true
         });
       }
-    }
 
     // ── 2. 데이터 전처리 ──
     const trendInput = chartData.results.map((r: any) => {
@@ -131,25 +128,21 @@ export async function POST(request: NextRequest) {
     // ── 3. 통합 AI 분석 (단 1회의 호출) ──
     const unifiedResult = await generateUnifiedInsight(
       trendInput, 
-      { totalCount: 124, genreBreakdown: { "뮤지컬": 45, "전시": 32 }, jejuCount: 12 }, 
+      { stats: { total: 124, jejuCount: 12, byGenre: { "뮤지컬": 45, "전시": 32 } } }, 
       filters
     );
 
     // ── 3. DB 저장 (트랜잭션 효과를 위해 개별 저장) ──
     const timestamp = new Date().toISOString();
     
-    if (supabase) {
-      const { error: dbError } = await supabase.from("ai_insights").insert([
-        { insight_type: "weekly_summary", title: `필터 분석: ${filterKey}`, content: JSON.stringify(unifiedResult.weekly_summary), filter_key: filterKey, generated_at: timestamp },
-        { insight_type: "jeju_idea", title: `필터 기획: ${filterKey}`, content: JSON.stringify(unifiedResult.jeju_insights), filter_key: filterKey, generated_at: timestamp },
-        { insight_type: "trending_keywords", title: `필터 키워드: ${filterKey}`, content: JSON.stringify(unifiedResult.trending_keywords), filter_key: filterKey, generated_at: timestamp }
-      ]);
+    const { error: dbError } = await supabase.from("ai_insights").insert([
+      { insight_type: "weekly_summary", title: `필터 분석: ${filterKey}`, content: JSON.stringify(unifiedResult.weekly_summary), filter_key: filterKey, generated_at: timestamp },
+      { insight_type: "jeju_idea", title: `필터 기획: ${filterKey}`, content: JSON.stringify(unifiedResult.jeju_insights), filter_key: filterKey, generated_at: timestamp },
+      { insight_type: "trending_keywords", title: `필터 키워드: ${filterKey}`, content: JSON.stringify(unifiedResult.trending_keywords), filter_key: filterKey, generated_at: timestamp }
+    ]);
 
-      if (dbError) {
-        console.warn("⚠️ [Insights] Failed to save to DB, but returning result:", dbError);
-      }
-    } else {
-      console.warn("⚠️ [Insights] Supabase client missing. Skipping DB storage.");
+    if (dbError) {
+      console.warn("⚠️ [Insights] Failed to save to DB, but returning result:", dbError);
     }
 
     return NextResponse.json({ 

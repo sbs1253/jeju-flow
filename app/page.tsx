@@ -4,11 +4,12 @@ import { useState, useEffect, useMemo } from "react";
 import { useTheme } from "next-themes";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { ModernOverview } from "@/components/dashboard/ModernOverview";
-import { NewspaperOverview } from "@/components/dashboard/NewspaperOverview";
 import { useTrends, usePerformances, useInsights, TrendFilters, getFilterKey } from "@/hooks/use-dashboard-data";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
+
+import { Suspense } from "react";
 
 function LoadingState() {
   return (
@@ -24,6 +25,14 @@ function LoadingState() {
 }
 
 export default function HomePage() {
+  return (
+    <Suspense fallback={<LoadingState />}>
+      <HomeContent />
+    </Suspense>
+  );
+}
+
+function HomeContent() {
   const { theme, resolvedTheme } = useTheme();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -136,20 +145,11 @@ export default function HomePage() {
 
   if (!mounted) return null;
 
-  const isNewspaper = theme === "newspaper" || resolvedTheme === "newspaper";
 
   return (
     <DashboardLayout>
       {isLoading ? (
         <LoadingState />
-      ) : isNewspaper ? (
-        <NewspaperOverview
-          today={today}
-          isLoading={isLoading}
-          trends={trends}
-          insights={mergedInsights}
-          getLatestRatio={getLatestRatio}
-        />
       ) : (
         <ModernOverview
           today={today}

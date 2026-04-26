@@ -4,15 +4,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Calendar,
   MapPin,
-  ExternalLink,
-  Users,
-  Clock,
-  CreditCard,
   Ticket,
   ChevronRight,
   Info,
-  Share2,
-  Heart,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -20,12 +14,7 @@ import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogDescription,
 } from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 
 import { Performance } from '@/types/performance';
@@ -79,6 +68,8 @@ export function PerformanceCard({ performance }: PerformanceCardProps) {
     price: detail?.pcseguidance || performance.price || '정보 없음',
     runtime_info: detail?.dtguidance || performance.runtime_info,
     relate_url: detail?.relateurl || performance.relate_url,
+    relate_urls: detail?.relate_urls || performance.relate_urls || [],
+    styurls: detail?.styurls || performance.styurls || [],
     kopis_url:
       detail?.kopis_url ||
       performance.kopis_url ||

@@ -4,14 +4,13 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { fetchRecentTrends } from "@/lib/naver-datalab";
+import { createServerSupabaseClient } from "@/lib/supabase";
 import sampleTrends from "@/data/sample/trends.json";
 
 const USE_SAMPLE = process.env.USE_SAMPLE_DATA === "true";
 
 export async function POST(request: NextRequest) {
   try {
-    const { fetchRecentTrends } = await import("@/lib/naver-datalab");
-    const { createServerSupabaseClient } = await import("@/lib/supabase");
     const supabase = createServerSupabaseClient();
 
     const days = 30;
@@ -64,7 +63,6 @@ export async function GET(request: NextRequest) {
     const isLive = searchParams.get("live") === "true";
     const filterKey = searchParams.get("filter_key") || "all_all_all_30";
 
-    const { createServerSupabaseClient } = await import("@/lib/supabase");
     const supabase = createServerSupabaseClient();
 
     // ── 1. 샘플 데이터 모드 ──

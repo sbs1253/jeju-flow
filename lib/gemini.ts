@@ -46,6 +46,21 @@ export interface UnifiedInsightResult {
   }>;
 }
 
+export interface TrendData {
+  group: string;
+  avgRatio: number;
+  changeRate: number;
+  keywords: string[];
+}
+
+export interface PerformanceStats {
+  stats: {
+    total: number;
+    jejuCount: number;
+    byGenre: Record<string, number>;
+  };
+}
+
 // ─────────────────────────────────────────
 // 공식 응답 스키마 (Structured Output Schema)
 // ─────────────────────────────────────────
@@ -99,9 +114,9 @@ const responseSchema = {
 // ─────────────────────────────────────────
 
 export async function generateUnifiedInsight(
-  trendData: any[],
-  performanceData: any,
-  persona: any = {}
+  trendData: TrendData[],
+  performanceData: PerformanceStats | null,
+  persona: { ages?: string[]; gender?: string; device?: string } = {}
 ): Promise<UnifiedInsightResult> {
   try {
     const ai = getAIClient();
@@ -154,8 +169,8 @@ export async function generateUnifiedInsight(
           responseSchema: responseSchema as any
         }
       });
-    } catch (e: any) {
-      console.warn(`⚠️ [Gemini] ${MODEL_NAME} failed, trying fallback gemini-1.5-flash-latest...`);
+    } catch (err: unknown) {
+      console.warn(`⚠️ [Gemini] ${MODEL_NAME} failed, trying fallback gemini-1.5-flash-latest...`, err);
       response = await ai.models.generateContent({
         model: "gemini-1.5-flash-latest",
         contents: prompt,

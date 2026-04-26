@@ -49,8 +49,10 @@ next-env.d.ts
 
 # agents & planning
 .gemini/
+docs/
 docs/PLANNING.md
 docs/PLAN_REMODELING.md
+docs/PLAN_AUDIT.md
 docs/TODO.md
 docs/CHANGELOG.md
 

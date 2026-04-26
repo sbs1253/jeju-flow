@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { fetchRecentPerformances, countByGenre, countByRegion } from "@/lib/kopis";
+import { createServerSupabaseClient } from "@/lib/supabase";
 import samplePerformances from "@/data/sample/performances.json";
 
 const USE_SAMPLE = process.env.USE_SAMPLE_DATA === "true";
@@ -22,7 +23,6 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const region = searchParams.get("region");
 
-    const { createServerSupabaseClient } = await import("@/lib/supabase");
     const supabase = createServerSupabaseClient();
 
     let query = supabase
@@ -97,7 +97,6 @@ export async function POST(request: NextRequest) {
 
     const kopisData = await fetchRecentPerformances(true); // 상세 정보 포함 수집
 
-    const { createServerSupabaseClient } = await import("@/lib/supabase");
     const supabase = createServerSupabaseClient();
 
     // KOPIS 날짜 포맷(YYYY.MM.DD) → Supabase DATE(YYYY-MM-DD) 변환

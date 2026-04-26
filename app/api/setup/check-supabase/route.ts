@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { createServerSupabaseClient } from "@/lib/supabase";
 
 export async function GET() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -19,7 +20,6 @@ export async function GET() {
   }
 
   try {
-    const { createServerSupabaseClient } = await import("@/lib/supabase");
     const supabase = createServerSupabaseClient();
 
     // 테이블 존재 여부 확인

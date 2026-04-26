@@ -6,8 +6,7 @@ export function createServerSupabaseClient() {
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!supabaseUrl || !supabaseServiceKey) {
-    console.warn("⚠️ [Supabase] Missing environment variables. DB operations will be skipped.");
-    return null;
+    throw new Error("⚠️ [Supabase] Missing server environment variables (NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY).");
   }
 
   return createClient(supabaseUrl, supabaseServiceKey, {
@@ -15,14 +14,12 @@ export function createServerSupabaseClient() {
   });
 }
 
-// 클라이언트 컴포넌트용 (anon key + RLS)
 export function createBrowserSupabaseClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    console.warn("⚠️ [Supabase] Missing browser environment variables.");
-    return null;
+    throw new Error("⚠️ [Supabase] Missing browser environment variables (NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY).");
   }
 
   return createClient(supabaseUrl, supabaseAnonKey);
