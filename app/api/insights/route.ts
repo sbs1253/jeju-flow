@@ -66,14 +66,50 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
-    const { filters, chartData, filterKey } = body;
+    let { filters, chartData, filterKey } = body;
 
+    const supabase = createServerSupabaseClient();
+
+    // ── 0. 자동 수집 모드 (Body가 없을 때 DB에서 최신 데이터 로드) ──
     if (!filters || !chartData || !filterKey) {
-      return NextResponse.json({ error: "Missing required data" }, { status: 400 });
+      console.log("[Insights] No body provided. Entering Automated Mode...");
+      filterKey = "all_all_all_30";
+      filters = { period: 30 };
+
+      // 1) 최신 트렌드 데이터 로드
+      const { data: trendRows } = await supabase
+        .from("search_trends")
+        .select("*")
+        .eq("filter_key", filterKey)
+        .order("collected_at", { ascending: false })
+        .limit(200); // 4개 그룹 * 50일치 정도
+
+      if (!trendRows || trendRows.length === 0) {
+        return NextResponse.json({ error: "No trend data found for analysis" }, { status: 400 });
+      }
+
+      // 가장 최근 수집 시점의 데이터만 필터링
+      const latestTimestamp = trendRows[0].collected_at;
+      const latestRows = trendRows.filter(r => r.collected_at === latestTimestamp);
+
+      const grouped = latestRows.reduce((acc: any, row) => {
+        if (!acc[row.keyword_group]) {
+          acc[row.keyword_group] = { keywords: row.keyword.split(", "), data: [] };
+        }
+        acc[row.keyword_group].data.push({ period: row.period_start, ratio: row.ratio });
+        return acc;
+      }, {});
+
+      chartData = {
+        results: Object.entries(grouped).map(([title, info]: [string, any]) => ({
+          title,
+          keywords: info.keywords,
+          data: info.data.sort((a: any, b: any) => a.period.localeCompare(b.period)),
+        }))
+      };
     }
 
     const { generateUnifiedInsight } = await import("@/lib/gemini");
-    const supabase = createServerSupabaseClient();
 
     // ── 1. DB 캐시 확인 (중복 생성 방지) ──
     const todayStart = new Date();
@@ -87,7 +123,7 @@ export async function POST(request: NextRequest) {
         .limit(3);
 
       if (existingCache && existingCache.length >= 3) {
-        console.log(`[Insights] Cache HIT in POST for ${filterKey}. Returning existing data.`);
+        console.log(`[Insights] Cache HIT for ${filterKey}. Returning existing data.`);
         const summaryRow = existingCache.find((r) => r.insight_type === "weekly_summary");
         const jejuIdeas = existingCache.find((r) => r.insight_type === "jeju_idea");
         const trendKw = existingCache.find((r) => r.insight_type === "trending_keywords");
@@ -107,9 +143,8 @@ export async function POST(request: NextRequest) {
       const allRatios = r.data.map((d: any) => d.ratio);
       const period = filters.period || 30;
       
-      // 전체 데이터에서 '최근 days일'과 '그 이전 days일'을 분리하여 비교
-      const secondHalf = allRatios.slice(-period); // 최근 n일
-      const firstHalf = allRatios.slice(-(period * 2), -period); // 이전 n일
+      const secondHalf = allRatios.slice(-period);
+      const firstHalf = allRatios.slice(-(period * 2), -period);
       
       const firstAvg = firstHalf.length > 0 ? firstHalf.reduce((a: number, b: number) => a + b, 0) / firstHalf.length : 0;
       const secondAvg = secondHalf.length > 0 ? secondHalf.reduce((a: number, b: number) => a + b, 0) / secondHalf.length : 0;
@@ -119,16 +154,29 @@ export async function POST(request: NextRequest) {
         group: r.title,
         keywords: r.keywords,
         series: r.data,
-        avgRatio: Math.round(secondAvg * 10) / 10, // 현재 기간의 평균 수치
-        changeRate: Math.round(changeRate * 10) / 10, // 이전 기간 대비 변화율
+        avgRatio: Math.round(secondAvg * 10) / 10,
+        changeRate: Math.round(changeRate * 10) / 10,
         trend: changeRate > 5 ? "상승" : changeRate < -5 ? "하락" : "유지"
       };
     });
 
-    // ── 3. 통합 AI 분석 (단 1회의 호출) ──
+    // 실제 공연 현황 통계 가져오기
+    const { data: perfData } = await supabase.from("performances").select("genre, region");
+    const perfStats = {
+      stats: {
+        total: perfData?.length || 0,
+        jejuCount: perfData?.filter(p => p.region === "제주").length || 0,
+        byGenre: (perfData || []).reduce((acc: any, p) => {
+          acc[p.genre] = (acc[p.genre] || 0) + 1;
+          return acc;
+        }, {})
+      }
+    };
+
+    // ── 3. 통합 AI 분석 ──
     const unifiedResult = await generateUnifiedInsight(
       trendInput, 
-      { stats: { total: 124, jejuCount: 12, byGenre: { "뮤지컬": 45, "전시": 32 } } }, 
+      perfStats, 
       filters
     );
 

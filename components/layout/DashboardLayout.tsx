@@ -28,7 +28,6 @@ import { Separator } from "@/components/ui/separator";
 const navItems = [
   { href: "/", label: "검색 트렌드", icon: LayoutDashboard },
   { href: "/statistics", label: "공연·축제 통계", icon: BarChart3 },
-  { href: "/setup", label: "셋업 가이드", icon: Settings },
 ];
 
 function NavLink({

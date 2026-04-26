@@ -12,7 +12,7 @@ jobs:
     steps:
       - name: Trigger data collection
         run: |
-          response=$(curl -s -w "\n%{http_code}" -X POST "${{ secrets.APP_URL }}/api/cron/collect" \
+          response=$(curl -s -L -f -w "\n%{http_code}" -X POST "${{ secrets.APP_URL }}/api/cron/collect" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
             -H "Content-Type: application/json")
           
@@ -21,11 +21,6 @@ jobs:
           
           echo "Status: $http_code"
           echo "Response: $body"
-          
-          if [ "$http_code" != "200" ]; then
-            echo "::error::Data collection failed with status $http_code"
-            exit 1
-          fi
 
       - name: Log success
         if: success()
