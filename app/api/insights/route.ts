@@ -14,15 +14,22 @@ export async function GET(request: NextRequest) {
 
     // ── 1. 필터 기반 캐시 조회 ──
     if (filterKey) {
-      const todayStart = new Date();
-      todayStart.setHours(0, 0, 0, 0);
-
-      const { data: cachedRows } = await supabase
+      const query = supabase
         .from('ai_insights')
         .select('*')
-        .eq('filter_key', filterKey)
-        .gte('generated_at', todayStart.toISOString())
-        .order('generated_at', { ascending: false });
+        .eq('filter_key', filterKey);
+
+      if (date) {
+        // 특정 날짜의 스냅샷 조회
+        query.gte('generated_at', `${date}T00:00:00Z`).lte('generated_at', `${date}T23:59:59Z`);
+      } else {
+        // 오늘 생성된 최신 데이터
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        query.gte('generated_at', todayStart.toISOString());
+      }
+
+      const { data: cachedRows } = await query.order('generated_at', { ascending: false });
 
       if (cachedRows && cachedRows.length > 0) {
         const summaryRow = cachedRows.find((r) => r.insight_type === 'weekly_summary');
@@ -111,7 +118,7 @@ export async function POST(request: NextRequest) {
       };
     }
 
-    const { generateUnifiedInsight } = await import('@/lib/gemini');
+    const { generateUnifiedInsight } = await import('@/lib/ai');
 
     // ── 1. DB 캐시 확인 (중복 생성 방지) ──
     const force = body.force === true;

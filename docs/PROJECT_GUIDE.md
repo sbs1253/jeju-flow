@@ -8,7 +8,7 @@
 
 ### 🎯 기획 의도
 제주도는 대한민국 최고의 관광지이자 문화 예술의 거점이지만, 실제 방문객들이 원하는 '문화적 요구'와 현장에서 제공되는 '공연/축제 공급' 사이에는 정보의 비대칭이 존재합니다. 
-**Jeju Flow**는 이러한 격차를 데이터로 시각화하고, AI(Gemini)를 통해 전문가 수준의 문화 기획 아이디어를 자동으로 도출하여 제주 문화 산업의 의사결정을 돕기 위해 기획되었습니다.
+**Jeju Flow**는 이러한 격차를 데이터로 시각화하고, AI(Groq/OpenAI)를 통해 전문가 수준의 문화 기획 아이디어를 자동으로 도출하여 제주 문화 산업의 의사결정을 돕기 위해 기획되었습니다.
 
 ### 👥 타겟 사용자 (User Targeting)
 1. **문화 행사 기획자**: 데이터에 기반한 새로운 축제 및 전시 테마 기획이 필요한 전문가
@@ -33,7 +33,8 @@
 - KOPIS API를 통해 제주 지역 공연의 상세 정보(포스터, 가격, 캐스팅, 상세 소개 이미지)를 전수 수집.
 - 단순히 목록만 보여주는 것이 아니라, 데이터베이스에 상세 정보를 아카이빙하여 빠른 검색 및 분석 제공.
 
-### 🤖 Gemini AI 통합 인사이트 (AI-Powered Planning)
+### 🤖 통합 AI 분석 엔진 (AI-Powered Planning)
+- **Groq API 기반 분석**: Google Gemini 대비 더욱 안정적이고 빠른 속도의 Groq(OpenAI GPT-OSS-120B) 엔진으로 마이그레이션하여 고밀도 인사이트 제공.
 - **수요-공급 격차 분석**: 검색량은 많지만 공연 공급이 부족한 분야를 AI가 자동으로 포착.
 - **창의적 기획 제안**: 수집된 트렌드 키워드를 바탕으로 실제 실행 가능한 6~8개의 문화 기획 아이디어 생성.
 - **주간 스냅샷**: 분석된 인사이트를 DB에 저장하여 과거 트렌드 흐름을 추적할 수 있는 아카이빙 기능.
@@ -50,7 +51,7 @@
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS 4, shadcn/ui, Framer Motion (고급 애니메이션)
 - **Database**: Supabase (PostgreSQL)
-- **AI**: Google Gemini 1.5 Flash / 3.1 Flash Lite
+- **AI**: Groq API (OpenAI GPT-OSS-120B)
 - **Visualization**: Recharts (인터랙티브 차트)
 - **Automation**: GitHub Actions (Cron Jobs)
 - **Deployment**: Vercel

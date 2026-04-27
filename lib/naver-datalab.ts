@@ -2,7 +2,7 @@
  * 네이버 DataLab API 유틸리티
  */
 
-const NAVER_DATALAB_URL = "https://openapi.naver.com/v1/datalab/search";
+const NAVER_DATALAB_URL = 'https://openapi.naver.com/v1/datalab/search';
 
 export interface NaverKeywordGroup {
   groupName: string;
@@ -12,11 +12,11 @@ export interface NaverKeywordGroup {
 export interface NaverTrendRequest {
   startDate: string;
   endDate: string;
-  timeUnit: "date" | "week" | "month";
+  timeUnit: 'date' | 'week' | 'month';
   keywordGroups: NaverKeywordGroup[];
-  device?: "pc" | "mo" | "";
+  device?: 'pc' | 'mo' | '';
   ages?: string[];
-  gender?: "m" | "f" | "";
+  gender?: 'm' | 'f' | '';
 }
 
 export interface NaverTrendResult {
@@ -34,35 +34,33 @@ export interface NaverTrendResponse {
 
 export const DEFAULT_KEYWORD_GROUPS: NaverKeywordGroup[] = [
   {
-    groupName: "공연·뮤지컬",
-    keywords: ["뮤지컬", "연극", "콘서트", "공연예매", "오페라"],
+    groupName: '공연·뮤지컬',
+    keywords: ['뮤지컬', '연극', '콘서트', '공연예매', '오페라'],
   },
   {
-    groupName: "축제·페스티벌",
-    keywords: ["축제", "페스티벌", "음악축제", "문화축제", "야외공연"],
+    groupName: '축제·페스티벌',
+    keywords: ['축제', '페스티벌', '음악축제', '문화축제', '야외공연'],
   },
   {
-    groupName: "전시·미술",
-    keywords: ["전시회", "미술관", "갤러리", "아트페어", "박물관"],
+    groupName: '전시·미술',
+    keywords: ['전시회', '미술관', '갤러리', '아트페어', '박물관'],
   },
   {
-    groupName: "팝업·체험",
-    keywords: ["팝업스토어", "팝업행사", "체험전시", "이머시브", "미디어아트"],
+    groupName: '팝업·체험',
+    keywords: ['팝업스토어', '팝업행사', '체험전시', '이머시브', '미디어아트'],
   },
   {
-    groupName: "클래식·국악",
-    keywords: ["클래식공연", "국악공연", "오케스트라", "심포니", "판소리"],
+    groupName: '클래식·국악',
+    keywords: ['클래식공연', '국악공연', '오케스트라', '심포니', '판소리'],
   },
 ];
 
-export async function fetchNaverTrends(
-  request: NaverTrendRequest
-): Promise<NaverTrendResponse> {
+export async function fetchNaverTrends(request: NaverTrendRequest): Promise<NaverTrendResponse> {
   const clientId = process.env.NAVER_CLIENT_ID;
   const clientSecret = process.env.NAVER_CLIENT_SECRET;
 
   if (!clientId || !clientSecret) {
-    throw new Error("Missing Naver API credentials");
+    throw new Error('Missing Naver API credentials');
   }
 
   const body = {
@@ -76,11 +74,11 @@ export async function fetchNaverTrends(
   };
 
   const response = await fetch(NAVER_DATALAB_URL, {
-    method: "POST",
+    method: 'POST',
     headers: {
-      "Content-Type": "application/json",
-      "X-Naver-Client-Id": clientId,
-      "X-Naver-Client-Secret": clientSecret,
+      'Content-Type': 'application/json',
+      'X-Naver-Client-Id': clientId,
+      'X-Naver-Client-Secret': clientSecret,
     },
     body: JSON.stringify(body),
   });
@@ -93,10 +91,10 @@ export async function fetchNaverTrends(
   return response.json();
 }
 
-const formatDate = (d: Date) => d.toISOString().split("T")[0];
+const formatDate = (d: Date) => d.toISOString().split('T')[0];
 
 export const formatPeriod = (start: string, end: string) => {
-  if (!start || !end) return "Loading...";
+  if (!start || !end) return 'Loading...';
   const s = new Date(start);
   const e = new Date(end);
   // 연도가 다를 경우에만 연도 표시, 같은 연도면 월.일만 표시하여 가독성 향상
@@ -109,8 +107,8 @@ export const formatPeriod = (start: string, end: string) => {
 
 export async function fetchRecentTrends(
   days = 30,
-  timeUnit: NaverTrendRequest["timeUnit"] = "week",
-  filters: { gender?: string; device?: string; ages?: string[] } = {}
+  timeUnit: NaverTrendRequest['timeUnit'] = 'week',
+  filters: { gender?: string; device?: string; ages?: string[] } = {},
 ): Promise<NaverTrendResponse> {
   const endDate = new Date();
   endDate.setDate(endDate.getDate() - 1);

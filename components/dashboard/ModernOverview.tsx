@@ -96,48 +96,57 @@ export function ModernOverview({
 
   const isFiltered = !!(filters.gender || filters.device || (filters.ages && filters.ages.length > 0));
 
+  const getPeriodLabel = (period: number) => {
+    if (period <= 7) return "전주 대비";
+    if (period <= 14) return "2주 전 대비";
+    if (period <= 30) return "전월 대비";
+    if (period <= 90) return "전분기 대비";
+    return "전기 대비";
+  };
+
   const getTrendData = (groupTitle: string) => {
-    // 1. AI 리포트가 있으면 분석의 근거가 되는 [30일 평균값]을 메인으로 사용 (정합성 해결)
+    const latestRatio = getLatestRatio(groupTitle);
+    const series = trends?.results?.find((r: any) => r.title.includes(groupTitle));
+    
+    // 1. 차트 데이터(trends)가 있으면 직접 계산 (정합성 최우선)
+    if (series?.data?.length >= 2) {
+      const ratios = series.data.map((d: any) => d.ratio);
+      const period = filters.period || 30;
+      
+      // 최근 N일 vs 이전 N일 비교
+      const targetData = ratios.slice(-period * 2);
+      if (targetData.length >= 2) {
+        const mid = Math.floor(targetData.length / 2);
+        const firstHalf = targetData.slice(0, mid);
+        const secondHalf = targetData.slice(mid);
+        
+        const firstAvg = firstHalf.reduce((a: number, b: number) => a + b, 0) / (firstHalf.length || 1);
+        const secondAvg = secondHalf.reduce((a: number, b: number) => a + b, 0) / (secondHalf.length || 1);
+        
+        const rate = firstAvg === 0 ? 0 : ((secondAvg - firstAvg) / firstAvg) * 100;
+        
+        return { 
+          ratio: secondAvg, // 30일 평균값 표시 (최신일 지수가 아님)
+          changeRate: Math.round(rate * 10) / 10,
+          isAverage: true
+        };
+      }
+    }
+
+    // 2. 차트 데이터가 부족하면 AI 리포트 백업 사용
     const aiTrend = summary?.groupTrends?.find(
       (g: any) => g.group === groupTitle || g.group.includes(groupTitle)
     );
     
     if (aiTrend) {
       return { 
-        ratio: aiTrend.avgRatio, // 30일 평균 (리포트 본문과 일치)
-        changeRate: aiTrend.changeRate, // 전월 대비 변화율
+        ratio: aiTrend.avgRatio,
+        changeRate: aiTrend.changeRate,
         isAverage: true
       };
     }
 
-    // 2. AI 리포트가 없는 경우 최신 데이터를 기본값으로 사용
-    const latestRatio = getLatestRatio(groupTitle);
-    const series = trends?.results?.find((r: any) => r.title.includes(groupTitle));
-    
-    if (series?.data?.length >= 2) {
-      const ratios = series.data.map((d: any) => d.ratio);
-      const period = filters.period || 30;
-      
-      // 전후 30일 비교 (총 60일 데이터 활용)
-      const targetData = ratios.slice(-period * 2);
-      if (targetData.length >= period) {
-        const mid = Math.floor(targetData.length / 2);
-        const firstHalf = targetData.slice(0, mid);
-        const secondHalf = targetData.slice(mid);
-        
-        const firstAvg = firstHalf.reduce((a: number, b: number) => a + b, 0) / firstHalf.length;
-        const secondAvg = secondHalf.reduce((a: number, b: number) => a + b, 0) / secondHalf.length;
-        
-        const rate = firstAvg === 0 ? 0 : ((secondAvg - firstAvg) / firstAvg) * 100;
-        
-        return { 
-          ratio: latestRatio, 
-          changeRate: Math.round(rate * 10) / 10,
-          isAverage: false
-        };
-      }
-    }
-
+    // 3. 최후의 수단으로 실시간 지수
     return {
       ratio: latestRatio,
       changeRate: 0,
@@ -415,44 +424,69 @@ export function ModernOverview({
       </motion.div>
 
       {/* ── Indicators ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
         <StatCard
           title="공연·뮤지컬"
           value={getTrendData("공연").ratio.toFixed(1)}
-          subtitle={getTrendData("공연").isAverage ? "30일 평균 지수" : "실시간 지수"}
+          subtitle={getTrendData("공연").isAverage ? `${filters.period || 30}일 평균 지수` : "실시간 지수"}
           icon={Music}
-          trend={{ value: getTrendData("공연").changeRate, label: "전월 대비" }}
+          trend={{ 
+            value: getTrendData("공연").changeRate, 
+            label: getPeriodLabel(filters.period || 30)
+          }}
           color="ocean"
           delay={0.1}
         />
         <StatCard
           title="축제·페스티벌"
           value={getTrendData("축제").ratio.toFixed(1)}
-          subtitle={getTrendData("축제").isAverage ? "30일 평균 지수" : "실시간 지수"}
+          subtitle={getTrendData("축제").isAverage ? `${filters.period || 30}일 평균 지수` : "실시간 지수"}
           icon={PartyPopper}
-          trend={{ value: getTrendData("축제").changeRate, label: "전월 대비" }}
+          trend={{ 
+            value: getTrendData("축제").changeRate, 
+            label: getPeriodLabel(filters.period || 30)
+          }}
           color="tangerine"
           delay={0.2}
         />
         <StatCard
           title="전시·미술"
           value={getTrendData("전시").ratio.toFixed(1)}
-          subtitle={getTrendData("전시").isAverage ? "30일 평균 지수" : "실시간 지수"}
+          subtitle={getTrendData("전시").isAverage ? `${filters.period || 30}일 평균 지수` : "실시간 지수"}
           icon={Image}
-          trend={{ value: getTrendData("전시").changeRate, label: "전월 대비" }}
+          trend={{ 
+            value: getTrendData("전시").changeRate, 
+            label: getPeriodLabel(filters.period || 30)
+          }}
           color="lava"
           delay={0.3}
         />
         <StatCard
+          title="팝업·체험"
+          value={getTrendData("팝업").ratio.toFixed(1)}
+          subtitle={getTrendData("팝업").isAverage ? `${filters.period || 30}일 평균 지수` : "실시간 지수"}
+          icon={Zap}
+          trend={{ 
+            value: getTrendData("팝업").changeRate, 
+            label: getPeriodLabel(filters.period || 30)
+          }}
+          color="tangerine"
+          delay={0.35}
+        />
+        <StatCard
           title="클래식·국악"
           value={getTrendData("클래식").ratio.toFixed(1)}
-          subtitle={getTrendData("클래식").isAverage ? "30일 평균 지수" : "실시간 지수"}
+          subtitle={getTrendData("클래식").isAverage ? `${filters.period || 30}일 평균 지수` : "실시간 지수"}
           icon={Mic2}
-          trend={{ value: getTrendData("클래식").changeRate, label: "전월 대비" }}
+          trend={{ 
+            value: getTrendData("클래식").changeRate, 
+            label: getPeriodLabel(filters.period || 30)
+          }}
           color="forest"
           delay={0.4}
         />
       </div>
+
 
       {/* ── Content Grid ── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
