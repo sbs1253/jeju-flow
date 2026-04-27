@@ -157,9 +157,9 @@ export default function DashboardLayout({
     <div className="flex h-dvh overflow-hidden bg-background text-foreground font-sans">
       {/* Sidebar */}
       <aside className="hidden lg:flex flex-col w-64 h-full fixed left-0 top-0 border-r z-50 border-border/40 bg-background/60 backdrop-blur-xl">
-        <div className="p-6">
+        <Link href="/" className="block p-6 hover:bg-primary/5 transition-colors group">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-primary text-primary-foreground">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-primary text-primary-foreground transition-transform group-hover:scale-110">
               <MapPin className="w-5 h-5" />
             </div>
             <div>
@@ -167,7 +167,7 @@ export default function DashboardLayout({
               <p className="text-[10px] font-medium uppercase tracking-widest opacity-60 text-muted-foreground">Dashboard</p>
             </div>
           </div>
-        </div>
+        </Link>
 
         <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
           {navItems.map((item) => {

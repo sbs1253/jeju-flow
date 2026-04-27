@@ -58,7 +58,10 @@ docs/PLAN_CRON_LOGGING.md
 docs/PLAN_CRON.md
 docs/PLAN_UI_AI_UPDATE.md
 docs/PLAN_TREND_FIX.md
+docs/PLANNING_MOBILE_AND_DATA.md
+docs/PLANNING_FULL_DEBUG.md
 
+testsprite_tests/
 # temporary scripts
 /scratch/
 
