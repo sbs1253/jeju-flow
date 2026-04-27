@@ -93,6 +93,7 @@ export async function POST(request: NextRequest) {
       const insightRes = await fetch(insightUrl, {
         method: "POST",
         headers,
+        body: JSON.stringify({ force: true }), // 크론에서는 항상 새로 생성
       });
 
       if (!insightRes.ok) {

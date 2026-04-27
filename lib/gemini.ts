@@ -18,7 +18,7 @@ function getAIClient(): GoogleGenAI {
   return aiClient;
 }
 
-const MODEL_NAME = 'gemini-3.1-flash-lite-preview';
+const MODEL_NAME = 'models/gemini-3.1-flash-lite-preview';
 
 // ─────────────────────────────────────────
 // 타입 정의
@@ -75,8 +75,20 @@ const responseSchema = {
         summary: { type: 'string' },
         highlight: { type: 'string' },
         risingGroups: { type: 'array', items: { type: 'string' } },
+        groupTrends: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              group: { type: 'string' },
+              avgRatio: { type: 'number' },
+              changeRate: { type: 'number' },
+            },
+            required: ['group', 'avgRatio', 'changeRate'],
+          },
+        },
       },
-      required: ['headline', 'summary', 'highlight', 'risingGroups'],
+      required: ['headline', 'summary', 'highlight', 'risingGroups', 'groupTrends'],
     },
     jeju_insights: {
       type: 'array',
@@ -150,49 +162,41 @@ export async function generateUnifiedInsight(
     const prompt = `
       당신은 제주도 문화 기획 및 데이터 분석 전문가입니다. 다음 **네이버 검색 트렌드(수요)**와 **KOPIS 공연 현황(공급)** 데이터를 융합 분석하여 리포트를 작성하세요.
       
-      [현재 필터링 타겟]
-      - 연령대: ${targetAges} | 성별: ${targetGender} | 기기: ${targetDevice}
+      [필독 - 데이터 인용 수칙]
+      1. **수치 절대 준수**: 리포트 본문에서 언급하는 상승률이나 변화폭은 반드시 아래 [데이터 요약] 섹션에 제공된 '변화' 수치를 **토씨 하나 틀리지 않고 그대로** 사용하십시오. 직접 계산하거나 수치를 어림잡지 마십시오.
+      2. **정합성 최우선**: 대시보드의 카드 수치와 당신의 리포트 수치가 다르면 데이터 신뢰도가 무너집니다. 반드시 제공된 수치를 '팩트'로 인용하세요.
+
+      [분석 기준 정보]
+      - 현재 날짜: ${new Date().toLocaleDateString('ko-KR')}
+      - 현재 필터링 타겟: 연령대(${targetAges}), 성별(${targetGender}), 기기(${targetDevice})
       
       [데이터 요약]
-      1) 검색 트렌드: ${dataContext}
+      1) 검색 트렌드 (이 수치를 그대로 인용하세요): 
+      ${dataContext}
       2) 공연 현황: ${performanceContext}
       
-      [작성 지침 - 중요]
-      1. **타겟 준수 및 편향 방지**: 
+      [작성 지침]
+      1. **groupTrends 작성**: 제공된 [데이터 요약]의 각 그룹명, 평균값, 변화율을 'groupTrends' 배열에 누락 없이 그대로 포함하십시오.
+      2. **타겟 준수 및 편향 방지**: 
         - 현재 분석 대상은 '${targetAges}'입니다. 
-         - **만약 '${targetAges}'이 '전체 연령대'라면, '2030', 'MZ세대', '청년층'과 같은 특정 세대에 국한된 용어를 헤드라인이나 요약의 주체로 사용하지 마세요.**
+        - **만약 '${targetAges}'이 '전체 연령대'라면, '2030', 'MZ세대', '청년층'과 같은 특정 세대에 국한된 용어를 헤드라인이나 요약의 주체로 사용하지 마세요.**
         - 대신 '제주 방문객 전체', '전 연령대', '다양한 연령층'과 같은 포괄적인 표현을 사용하십시오.
-        - 특정 세대의 트렌드가 검색 데이터에 보이더라도, 이를 전체의 경향인 것처럼 일반화하지 말고 "2030 세대를 중심으로 한 ~트렌드가 있으나 전체적으로는~"과 같이 균형 있게 서술하세요.
-      2. **페르소나 명명**: 'risingGroups'는 단순히 키워드(예: 축제)를 나열하지 말고, '~~족', '~~러', '~~컬렉터', '~~디거'와 같이 트렌드 리포트 스타일의 세련된 페르소나 명칭으로 작성하세요. (예: "뮤지컬 컬렉터", "제주 로컬 탐험가" 등)
-      3. **수요-공급 격차 분석**: 사람들이 많이 검색하는 키워드(수요)와 실제 진행 중인 공연(공급)을 비교하여, 현재 부족하거나 유망한 분야를 짚어주세요.
-      4. 모든 인사이트는 위에서 명시한 타겟 그룹의 실제 라이프스타일에 맞춤화되어야 합니다.
-      5. **jeju_insights**: 구체적인 문화 기획 아이디어를 6-8개 제안하세요. 각 아이디어는 '왜 지금 이 트렌드에 필요한지' 근거를 포함해야 합니다.
+      3. **페르소나 명명**: 'risingGroups'는 단순히 키워드(예: 축제)를 나열하지 말고, '~~족', '~~러', '~~컬렉터'와 같이 세련된 페르소나 명칭으로 작성하세요.
+      4. **수요-공급 격차 분석**: 사람들이 많이 검색하는 분야(수요)와 실제 진행 중인 공연(공급)을 비교하여, 유망한 분야를 제안하세요.
+      5. **jeju_insights**: 구체적인 문화 기획 아이디어를 6-8개 제안하세요.
       6. **trending_keywords**: 현재 트렌드와 연관된 공연/문화 키워드 10개 이상을 생성하세요.
-      7. 실현 가능한 수준의 전문적인 톤을 유지하세요.
     `;
 
-    // ── 공식 가이드 규격 호출 ──
-    let response;
-    try {
-      response = await ai.models.generateContent({
-        model: MODEL_NAME,
-        contents: prompt,
-        config: {
-          responseMimeType: 'application/json',
-          responseSchema: responseSchema as any,
-        },
-      });
-    } catch (err: unknown) {
-      console.warn(`⚠️ [Gemini] ${MODEL_NAME} failed, trying fallback gemini-1.5-flash-latest...`, err);
-      response = await ai.models.generateContent({
-        model: 'gemini-1.5-flash-latest',
-        contents: prompt,
-        config: {
-          responseMimeType: 'application/json',
-          responseSchema: responseSchema as any,
-        },
-      });
-    }
+    // ── 공식 가이드 규격 호출 (최신 GenAI SDK 패턴) ──
+    // 사용자 요청에 따라 gemini-3.1-flash-lite-preview 모델만 단독 사용
+    const response = await ai.models.generateContent({
+      model: MODEL_NAME,
+      contents: [{ parts: [{ text: prompt }] }],
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: responseSchema as any,
+      },
+    });
 
     // ── 💡 응답 파싱: 최신 SDK는 response.text를 바로 제공하거나 response.response.text() 사용 ──
     let responseText = '';

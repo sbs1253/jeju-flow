@@ -95,23 +95,25 @@ export function ModernOverview({
   const isFiltered = !!(filters.gender || filters.device || (filters.ages && filters.ages.length > 0));
 
   const getTrendData = (groupTitle: string) => {
-    const trend = summary?.groupTrends?.find(
+    const aiTrend = summary?.groupTrends?.find(
       (g: any) => g.group === groupTitle || g.group.includes(groupTitle)
     );
     
-    if (trend) {
-      return { ratio: trend.avgRatio, changeRate: trend.changeRate };
+    if (aiTrend) {
+      return { ratio: aiTrend.avgRatio, changeRate: aiTrend.changeRate };
     }
 
     const series = trends?.results?.find((r: any) => r.title.includes(groupTitle));
-    let changeRate = 0;
     
     if (series?.data?.length >= 2) {
       const ratios = series.data.map((d: any) => d.ratio);
       const period = filters.period || 30;
       
-      const secondHalf = ratios.slice(-period);
-      const firstHalf = ratios.slice(-(period * 2), -period);
+      const targetData = ratios.slice(-period);
+      const mid = Math.floor(targetData.length / 2);
+      
+      const firstHalf = targetData.slice(0, mid);
+      const secondHalf = targetData.slice(mid);
       
       const firstAvg = firstHalf.length > 0 ? firstHalf.reduce((a: number, b: number) => a + b, 0) / firstHalf.length : 0;
       const secondAvg = secondHalf.length > 0 ? secondHalf.reduce((a: number, b: number) => a + b, 0) / secondHalf.length : 0;

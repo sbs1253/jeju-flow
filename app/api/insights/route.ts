@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
         .select("*")
         .eq("filter_key", filterKey)
         .order("collected_at", { ascending: false })
-        .limit(200); // 4개 그룹 * 50일치 정도
+        .limit(400); // 5개 그룹 * 80일치 정도 (비교군 충분히 확보)
 
       if (!trendRows || trendRows.length === 0) {
         return NextResponse.json({ error: "No trend data found for analysis" }, { status: 400 });
@@ -107,20 +107,24 @@ export async function POST(request: NextRequest) {
           data: info.data.sort((a: any, b: any) => a.period.localeCompare(b.period)),
         }))
       };
+      // 필터가 없을 때도 필터 정보 생성 (전처리용)
+      filters = { period: 30 };
     }
 
     const { generateUnifiedInsight } = await import("@/lib/gemini");
 
     // ── 1. DB 캐시 확인 (중복 생성 방지) ──
+    const force = body.force === true;
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
 
-    const { data: existingCache } = await supabase
-        .from("ai_insights")
-        .select("*")
-        .eq("filter_key", filterKey)
-        .gte("generated_at", todayStart.toISOString())
-        .limit(3);
+    if (!force) {
+      const { data: existingCache } = await supabase
+          .from("ai_insights")
+          .select("*")
+          .eq("filter_key", filterKey)
+          .gte("generated_at", todayStart.toISOString())
+          .limit(3);
 
       if (existingCache && existingCache.length >= 3) {
         console.log(`[Insights] Cache HIT for ${filterKey}. Returning existing data.`);
@@ -137,14 +141,21 @@ export async function POST(request: NextRequest) {
           is_cached: true
         });
       }
+    } else {
+      console.log(`[Insights] Force regeneration requested for ${filterKey}`);
+    }
 
     // ── 2. 데이터 전처리 ──
     const trendInput = chartData.results.map((r: any) => {
       const allRatios = r.data.map((d: any) => d.ratio);
       const period = filters.period || 30;
       
-      const secondHalf = allRatios.slice(-period);
-      const firstHalf = allRatios.slice(-(period * 2), -period);
+      // UI와 동일한 비교 로직: 선택된 기간(period)을 둘로 나눠서 전/후반 비교
+      const targetData = allRatios.slice(-period); 
+      const mid = Math.floor(targetData.length / 2);
+      
+      const firstHalf = targetData.slice(0, mid);
+      const secondHalf = targetData.slice(mid);
       
       const firstAvg = firstHalf.length > 0 ? firstHalf.reduce((a: number, b: number) => a + b, 0) / firstHalf.length : 0;
       const secondAvg = secondHalf.length > 0 ? secondHalf.reduce((a: number, b: number) => a + b, 0) / secondHalf.length : 0;
@@ -153,10 +164,8 @@ export async function POST(request: NextRequest) {
       return {
         group: r.title,
         keywords: r.keywords,
-        series: r.data,
         avgRatio: Math.round(secondAvg * 10) / 10,
-        changeRate: Math.round(changeRate * 10) / 10,
-        trend: changeRate > 5 ? "상승" : changeRate < -5 ? "하락" : "유지"
+        changeRate: Math.round(changeRate * 10) / 10
       };
     });
 
