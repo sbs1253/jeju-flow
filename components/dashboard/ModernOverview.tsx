@@ -56,6 +56,7 @@ interface ModernOverviewProps {
   onFilterChange: (filters: TrendFilters) => void;
   onAnalyzeFilter: () => void;
   isAnalyzing: boolean;
+  isInsightsLoading?: boolean;
   isCached?: boolean;
 }
 
@@ -69,6 +70,7 @@ export function ModernOverview({
   onFilterChange,
   onAnalyzeFilter,
   isAnalyzing,
+  isInsightsLoading = false,
   isCached = false,
 }: ModernOverviewProps) {
   const queryClient = useQueryClient();
@@ -94,39 +96,61 @@ export function ModernOverview({
 
   const isFiltered = !!(filters.gender || filters.device || (filters.ages && filters.ages.length > 0));
 
-  const getTrendData = (groupTitle: string) => {
-    const trend = summary?.groupTrends?.find(
-      (g: any) => g.group === groupTitle || g.group.includes(groupTitle)
-    );
-    
-    if (trend) {
-      return { ratio: trend.avgRatio, changeRate: trend.changeRate };
-    }
+  const getPeriodLabel = (period: number) => {
+    if (period <= 7) return "전주 대비";
+    if (period <= 14) return "2주 전 대비";
+    if (period <= 30) return "전월 대비";
+    if (period <= 90) return "전분기 대비";
+    return "전기 대비";
+  };
 
+  const getTrendData = (groupTitle: string) => {
+    const latestRatio = getLatestRatio(groupTitle);
     const series = trends?.results?.find((r: any) => r.title.includes(groupTitle));
-    let changeRate = 0;
     
+    // 1. 차트 데이터(trends)가 있으면 직접 계산 (정합성 최우선)
     if (series?.data?.length >= 2) {
       const ratios = series.data.map((d: any) => d.ratio);
       const period = filters.period || 30;
       
-      const secondHalf = ratios.slice(-period);
-      const firstHalf = ratios.slice(-(period * 2), -period);
-      
-      const firstAvg = firstHalf.length > 0 ? firstHalf.reduce((a: number, b: number) => a + b, 0) / firstHalf.length : 0;
-      const secondAvg = secondHalf.length > 0 ? secondHalf.reduce((a: number, b: number) => a + b, 0) / secondHalf.length : 0;
-      
-      const rate = firstAvg === 0 ? 0 : ((secondAvg - firstAvg) / firstAvg) * 100;
-      
+      // 최근 N일 vs 이전 N일 비교
+      const targetData = ratios.slice(-period * 2);
+      if (targetData.length >= 2) {
+        const mid = Math.floor(targetData.length / 2);
+        const firstHalf = targetData.slice(0, mid);
+        const secondHalf = targetData.slice(mid);
+        
+        const firstAvg = firstHalf.reduce((a: number, b: number) => a + b, 0) / (firstHalf.length || 1);
+        const secondAvg = secondHalf.reduce((a: number, b: number) => a + b, 0) / (secondHalf.length || 1);
+        
+        const rate = firstAvg === 0 ? 0 : ((secondAvg - firstAvg) / firstAvg) * 100;
+        
+        return { 
+          ratio: secondAvg, // 30일 평균값 표시 (최신일 지수가 아님)
+          changeRate: Math.round(rate * 10) / 10,
+          isAverage: true
+        };
+      }
+    }
+
+    // 2. 차트 데이터가 부족하면 AI 리포트 백업 사용
+    const aiTrend = summary?.groupTrends?.find(
+      (g: any) => g.group === groupTitle || g.group.includes(groupTitle)
+    );
+    
+    if (aiTrend) {
       return { 
-        ratio: Math.round(secondAvg * 10) / 10, 
-        changeRate: Math.round(rate * 10) / 10 
+        ratio: aiTrend.avgRatio,
+        changeRate: aiTrend.changeRate,
+        isAverage: true
       };
     }
 
+    // 3. 최후의 수단으로 실시간 지수
     return {
-      ratio: getLatestRatio(groupTitle),
-      changeRate: 0
+      ratio: latestRatio,
+      changeRate: 0,
+      isAverage: false
     };
   };
 
@@ -372,7 +396,7 @@ export function ModernOverview({
                     <Sparkles className="text-indigo-400 w-7 h-7" />
                   </div>
                   <div>
-                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">GEMINI 3.1 FLASH LITE</p>
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Groq GPT-OSS-120B</p>
                     <p className="text-xl font-black text-foreground uppercase tracking-tighter">
                        {summary?.risingGroups?.[0] || "READY"}
                     </p>
@@ -400,44 +424,69 @@ export function ModernOverview({
       </motion.div>
 
       {/* ── Indicators ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
         <StatCard
           title="공연·뮤지컬"
           value={getTrendData("공연").ratio.toFixed(1)}
-          subtitle="Search Intensity"
+          subtitle={getTrendData("공연").isAverage ? `${filters.period || 30}일 평균 지수` : "실시간 지수"}
           icon={Music}
-          trend={{ value: getTrendData("공연").changeRate, label: "VS PREV" }}
+          trend={{ 
+            value: getTrendData("공연").changeRate, 
+            label: getPeriodLabel(filters.period || 30)
+          }}
           color="ocean"
           delay={0.1}
         />
         <StatCard
           title="축제·페스티벌"
           value={getTrendData("축제").ratio.toFixed(1)}
-          subtitle="Search Intensity"
+          subtitle={getTrendData("축제").isAverage ? `${filters.period || 30}일 평균 지수` : "실시간 지수"}
           icon={PartyPopper}
-          trend={{ value: getTrendData("축제").changeRate, label: "VS PREV" }}
+          trend={{ 
+            value: getTrendData("축제").changeRate, 
+            label: getPeriodLabel(filters.period || 30)
+          }}
           color="tangerine"
           delay={0.2}
         />
         <StatCard
           title="전시·미술"
           value={getTrendData("전시").ratio.toFixed(1)}
-          subtitle="Search Intensity"
+          subtitle={getTrendData("전시").isAverage ? `${filters.period || 30}일 평균 지수` : "실시간 지수"}
           icon={Image}
-          trend={{ value: getTrendData("전시").changeRate, label: "VS PREV" }}
+          trend={{ 
+            value: getTrendData("전시").changeRate, 
+            label: getPeriodLabel(filters.period || 30)
+          }}
           color="lava"
           delay={0.3}
         />
         <StatCard
+          title="팝업·체험"
+          value={getTrendData("팝업").ratio.toFixed(1)}
+          subtitle={getTrendData("팝업").isAverage ? `${filters.period || 30}일 평균 지수` : "실시간 지수"}
+          icon={Zap}
+          trend={{ 
+            value: getTrendData("팝업").changeRate, 
+            label: getPeriodLabel(filters.period || 30)
+          }}
+          color="tangerine"
+          delay={0.35}
+        />
+        <StatCard
           title="클래식·국악"
           value={getTrendData("클래식").ratio.toFixed(1)}
-          subtitle="Search Intensity"
+          subtitle={getTrendData("클래식").isAverage ? `${filters.period || 30}일 평균 지수` : "실시간 지수"}
           icon={Mic2}
-          trend={{ value: getTrendData("클래식").changeRate, label: "VS PREV" }}
+          trend={{ 
+            value: getTrendData("클래식").changeRate, 
+            label: getPeriodLabel(filters.period || 30)
+          }}
           color="forest"
           delay={0.4}
         />
       </div>
+
 
       {/* ── Content Grid ── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
@@ -463,6 +512,21 @@ export function ModernOverview({
                 highlight={summary.highlight}
                 delay={0.2}
               />
+            ) : isInsightsLoading ? (
+              <div className="group relative p-12 bg-card border border-border rounded-[3rem] text-center overflow-hidden">
+                <div className="relative z-10 space-y-6">
+                   <div className="w-16 h-16 bg-indigo-500/10 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
+                      <BrainCircuit className="w-8 h-8 text-indigo-400" />
+                   </div>
+                   <div className="space-y-3">
+                     <div className="h-4 w-48 bg-muted rounded-full mx-auto animate-pulse"></div>
+                     <div className="h-3 w-64 bg-muted rounded-full mx-auto animate-pulse"></div>
+                   </div>
+                   <p className="text-[10px] text-indigo-400 font-black uppercase tracking-widest animate-pulse">
+                      Loading Target Analysis...
+                   </p>
+                </div>
+              </div>
             ) : (
               <div className="group relative p-12 bg-muted/20 border-2 border-dashed border-border rounded-[3rem] text-center overflow-hidden">
                 <div className="relative z-10 space-y-4">

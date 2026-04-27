@@ -53,11 +53,11 @@ docs/PLANNING.md
 docs/PLAN_REMODELING.md
 docs/PLAN_AUDIT.md
 docs/TODO.md
-docs/CHANGELOG.md
 docs/PLAN_CLEANUP.md
 docs/PLAN_CRON_LOGGING.md
 docs/PLAN_CRON.md
-
+docs/PLAN_UI_AI_UPDATE.md
+docs/PLAN_TREND_FIX.md
 
 # temporary scripts
 /scratch/

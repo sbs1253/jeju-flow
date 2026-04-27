@@ -93,6 +93,11 @@ export async function POST(request: NextRequest) {
       const insightRes = await fetch(insightUrl, {
         method: "POST",
         headers,
+        body: JSON.stringify({ 
+          force: true,
+          filterKey: "all_all_all_30",
+          filters: { period: 30 }
+        }), // 크론에서는 마스터 키로 명시적 생성
       });
 
       if (!insightRes.ok) {

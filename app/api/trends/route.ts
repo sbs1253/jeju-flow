@@ -92,6 +92,8 @@ export async function GET(request: NextRequest) {
     }
 
     // ── 2. DB 캐시 조회 (필터가 있을 때) ──
+    const fetchDays = days * 2; // 분석을 위해 2배 기간을 가져옴 (비교군 확보)
+    
     if (isLive || gender || device || ages.length > 0 || days !== 30) {
       const today = new Date().toISOString().split('T')[0];
       
@@ -102,8 +104,10 @@ export async function GET(request: NextRequest) {
         .gte("collected_at", `${today}T00:00:00Z`)
         .order("period_start", { ascending: true });
 
-      if (cachedRows && cachedRows.length > 0) {
-        console.log(`[API] Returning CACHED trends for key: ${filterKey}`);
+      // 캐시가 있고, 데이터 개수가 충분할 때만 캐시 반환
+      // (예: 30일 분석인데 캐시에 30개만 있으면 60개를 채우기 위해 라이브 페칭 진행)
+      if (cachedRows && cachedRows.length >= (fetchDays * 4)) { // 4-5개 키워드 그룹 고려
+        console.log(`[API] Returning CACHED trends for key: ${filterKey} (${cachedRows.length} rows)`);
         
         const grouped = cachedRows.reduce((acc: any, row) => {
           if (!acc[row.keyword_group]) {
@@ -131,8 +135,7 @@ export async function GET(request: NextRequest) {
         });
       }
 
-      // 분석을 위해 2배 기간을 가져옴 (비교군 확보)
-      const fetchDays = days * 2;
+      console.log(`[API] Cache missing or insufficient for ${filterKey}. Fetching ${fetchDays} days...`);
       const liveData = await fetchRecentTrends(fetchDays, "date", {
         gender: gender === 'undefined' ? undefined : (gender as any),
         device: device === 'undefined' ? undefined : (device as any),
