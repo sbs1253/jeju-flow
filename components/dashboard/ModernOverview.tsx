@@ -366,7 +366,7 @@ export function ModernOverview({
         <div className="relative z-10 p-12 md:p-16 flex flex-col xl:flex-row items-center justify-between gap-12">
           <div className="space-y-8 text-center md:text-left max-w-2xl">
             <div className="space-y-4">
-              <h1 className="text-5xl md:text-8xl font-black text-foreground tracking-tighter leading-[0.8] uppercase">
+              <h1 className="text-5xl md:text-6xl lg:text-8xl font-black text-foreground tracking-tighter leading-[0.8] uppercase">
                 Culture <br />
                 <span className="text-indigo-500">Intelligence</span>
               </h1>
@@ -424,7 +424,7 @@ export function ModernOverview({
       </motion.div>
 
       {/* ── Indicators ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-6">
         <StatCard
           title="공연·뮤지컬"
           value={getTrendData("공연").ratio.toFixed(1)}

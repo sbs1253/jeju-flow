@@ -66,7 +66,7 @@ export function GenrePieChart({ data, title = "전국 장르별 분포" }: Genre
       </CardHeader>
       <CardContent className="pt-4 flex-1 flex flex-col gap-10">
         {/* Chart Section with Center Total */}
-        <div className="w-full h-[280px] relative">
+        <div className="w-full h-[280px] relative min-w-0">
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
             <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">TOTAL</span>
             <span className="text-3xl font-black text-foreground tracking-tighter">{total.toLocaleString()}</span>
