@@ -56,6 +56,7 @@ interface ModernOverviewProps {
   onFilterChange: (filters: TrendFilters) => void;
   onAnalyzeFilter: () => void;
   isAnalyzing: boolean;
+  isInsightsLoading?: boolean;
   isCached?: boolean;
 }
 
@@ -69,6 +70,7 @@ export function ModernOverview({
   onFilterChange,
   onAnalyzeFilter,
   isAnalyzing,
+  isInsightsLoading = false,
   isCached = false,
 }: ModernOverviewProps) {
   const queryClient = useQueryClient();
@@ -95,40 +97,51 @@ export function ModernOverview({
   const isFiltered = !!(filters.gender || filters.device || (filters.ages && filters.ages.length > 0));
 
   const getTrendData = (groupTitle: string) => {
+    // 1. AI 리포트가 있으면 분석의 근거가 되는 [30일 평균값]을 메인으로 사용 (정합성 해결)
     const aiTrend = summary?.groupTrends?.find(
       (g: any) => g.group === groupTitle || g.group.includes(groupTitle)
     );
     
     if (aiTrend) {
-      return { ratio: aiTrend.avgRatio, changeRate: aiTrend.changeRate };
+      return { 
+        ratio: aiTrend.avgRatio, // 30일 평균 (리포트 본문과 일치)
+        changeRate: aiTrend.changeRate, // 전월 대비 변화율
+        isAverage: true
+      };
     }
 
+    // 2. AI 리포트가 없는 경우 최신 데이터를 기본값으로 사용
+    const latestRatio = getLatestRatio(groupTitle);
     const series = trends?.results?.find((r: any) => r.title.includes(groupTitle));
     
     if (series?.data?.length >= 2) {
       const ratios = series.data.map((d: any) => d.ratio);
       const period = filters.period || 30;
       
-      const targetData = ratios.slice(-period);
-      const mid = Math.floor(targetData.length / 2);
-      
-      const firstHalf = targetData.slice(0, mid);
-      const secondHalf = targetData.slice(mid);
-      
-      const firstAvg = firstHalf.length > 0 ? firstHalf.reduce((a: number, b: number) => a + b, 0) / firstHalf.length : 0;
-      const secondAvg = secondHalf.length > 0 ? secondHalf.reduce((a: number, b: number) => a + b, 0) / secondHalf.length : 0;
-      
-      const rate = firstAvg === 0 ? 0 : ((secondAvg - firstAvg) / firstAvg) * 100;
-      
-      return { 
-        ratio: Math.round(secondAvg * 10) / 10, 
-        changeRate: Math.round(rate * 10) / 10 
-      };
+      // 전후 30일 비교 (총 60일 데이터 활용)
+      const targetData = ratios.slice(-period * 2);
+      if (targetData.length >= period) {
+        const mid = Math.floor(targetData.length / 2);
+        const firstHalf = targetData.slice(0, mid);
+        const secondHalf = targetData.slice(mid);
+        
+        const firstAvg = firstHalf.reduce((a: number, b: number) => a + b, 0) / firstHalf.length;
+        const secondAvg = secondHalf.reduce((a: number, b: number) => a + b, 0) / secondHalf.length;
+        
+        const rate = firstAvg === 0 ? 0 : ((secondAvg - firstAvg) / firstAvg) * 100;
+        
+        return { 
+          ratio: latestRatio, 
+          changeRate: Math.round(rate * 10) / 10,
+          isAverage: false
+        };
+      }
     }
 
     return {
-      ratio: getLatestRatio(groupTitle),
-      changeRate: 0
+      ratio: latestRatio,
+      changeRate: 0,
+      isAverage: false
     };
   };
 
@@ -374,7 +387,7 @@ export function ModernOverview({
                     <Sparkles className="text-indigo-400 w-7 h-7" />
                   </div>
                   <div>
-                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">GEMINI 3.1 FLASH LITE</p>
+                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Groq GPT-OSS-120B</p>
                     <p className="text-xl font-black text-foreground uppercase tracking-tighter">
                        {summary?.risingGroups?.[0] || "READY"}
                     </p>
@@ -406,36 +419,36 @@ export function ModernOverview({
         <StatCard
           title="공연·뮤지컬"
           value={getTrendData("공연").ratio.toFixed(1)}
-          subtitle="Search Intensity"
+          subtitle={getTrendData("공연").isAverage ? "30일 평균 지수" : "실시간 지수"}
           icon={Music}
-          trend={{ value: getTrendData("공연").changeRate, label: "VS PREV" }}
+          trend={{ value: getTrendData("공연").changeRate, label: "전월 대비" }}
           color="ocean"
           delay={0.1}
         />
         <StatCard
           title="축제·페스티벌"
           value={getTrendData("축제").ratio.toFixed(1)}
-          subtitle="Search Intensity"
+          subtitle={getTrendData("축제").isAverage ? "30일 평균 지수" : "실시간 지수"}
           icon={PartyPopper}
-          trend={{ value: getTrendData("축제").changeRate, label: "VS PREV" }}
+          trend={{ value: getTrendData("축제").changeRate, label: "전월 대비" }}
           color="tangerine"
           delay={0.2}
         />
         <StatCard
           title="전시·미술"
           value={getTrendData("전시").ratio.toFixed(1)}
-          subtitle="Search Intensity"
+          subtitle={getTrendData("전시").isAverage ? "30일 평균 지수" : "실시간 지수"}
           icon={Image}
-          trend={{ value: getTrendData("전시").changeRate, label: "VS PREV" }}
+          trend={{ value: getTrendData("전시").changeRate, label: "전월 대비" }}
           color="lava"
           delay={0.3}
         />
         <StatCard
           title="클래식·국악"
           value={getTrendData("클래식").ratio.toFixed(1)}
-          subtitle="Search Intensity"
+          subtitle={getTrendData("클래식").isAverage ? "30일 평균 지수" : "실시간 지수"}
           icon={Mic2}
-          trend={{ value: getTrendData("클래식").changeRate, label: "VS PREV" }}
+          trend={{ value: getTrendData("클래식").changeRate, label: "전월 대비" }}
           color="forest"
           delay={0.4}
         />
@@ -465,6 +478,21 @@ export function ModernOverview({
                 highlight={summary.highlight}
                 delay={0.2}
               />
+            ) : isInsightsLoading ? (
+              <div className="group relative p-12 bg-card border border-border rounded-[3rem] text-center overflow-hidden">
+                <div className="relative z-10 space-y-6">
+                   <div className="w-16 h-16 bg-indigo-500/10 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
+                      <BrainCircuit className="w-8 h-8 text-indigo-400" />
+                   </div>
+                   <div className="space-y-3">
+                     <div className="h-4 w-48 bg-muted rounded-full mx-auto animate-pulse"></div>
+                     <div className="h-3 w-64 bg-muted rounded-full mx-auto animate-pulse"></div>
+                   </div>
+                   <p className="text-[10px] text-indigo-400 font-black uppercase tracking-widest animate-pulse">
+                      Loading Target Analysis...
+                   </p>
+                </div>
+              </div>
             ) : (
               <div className="group relative p-12 bg-muted/20 border-2 border-dashed border-border rounded-[3rem] text-center overflow-hidden">
                 <div className="relative z-10 space-y-4">

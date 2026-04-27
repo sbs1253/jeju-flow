@@ -72,8 +72,6 @@ function HomeContent() {
   const [mounted, setMounted] = useState(false);
   const [today, setToday] = useState("");
 
-  const isLoading = trendsLoading || perfLoading || insightsLoading;
-
   useEffect(() => {
     setMounted(true);
     const baseDate = dateParam ? new Date(dateParam) : new Date();
@@ -145,15 +143,14 @@ function HomeContent() {
 
   if (!mounted) return null;
 
-
   return (
     <DashboardLayout>
-      {isLoading ? (
+      {trendsLoading ? (
         <LoadingState />
       ) : (
         <ModernOverview
           today={today}
-          isLoading={isLoading}
+          isLoading={trendsLoading}
           trends={trends}
           insights={mergedInsights}
           getLatestRatio={getLatestRatio}
@@ -161,6 +158,7 @@ function HomeContent() {
           onFilterChange={handleFilterChange}
           onAnalyzeFilter={handleAnalyzeFilter}
           isAnalyzing={isAnalyzing}
+          isInsightsLoading={insightsLoading}
           isCached={!!insights?.is_cached}
         />
       )}

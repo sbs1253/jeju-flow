@@ -1,24 +1,24 @@
 /**
- * Gemini API 유틸리티 (ai.google.dev 2026 공식 퀵스타트 규격 적용)
+ * 대안 AI: Groq API (Llama 3.3) 유틸리티
  */
 
-import { GoogleGenAI } from '@google/genai';
+import Groq from 'groq-sdk';
 
-let aiClient: GoogleGenAI | null = null;
+let groqClient: Groq | null = null;
 
-function getAIClient(): GoogleGenAI {
-  if (!aiClient) {
-    const apiKey = process.env.GEMINI_API_KEY;
+function getGroqClient(): Groq {
+  if (!groqClient) {
+    const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey) {
-      throw new Error('GEMINI_API_KEY가 설정되지 않았습니다.');
+      throw new Error('GROQ_API_KEY가 설정되지 않았습니다. .env 파일을 확인해 주세요.');
     }
-    // 공식 문서: 빈 객체 또는 명시적 키 전달
-    aiClient = new GoogleGenAI({ apiKey });
+    groqClient = new Groq({ apiKey });
   }
-  return aiClient;
+  return groqClient;
 }
 
-const MODEL_NAME = 'models/gemini-3.1-flash-lite-preview';
+// 💡 지정해주신 최신 모델 적용
+const MODEL_NAME = 'openai/gpt-oss-120b';
 
 // ─────────────────────────────────────────
 // 타입 정의
@@ -30,6 +30,11 @@ export interface UnifiedInsightResult {
     summary: string;
     highlight: string;
     risingGroups: string[];
+    groupTrends: Array<{
+      group: string;
+      avgRatio: number;
+      changeRate: number;
+    }>;
   };
   jeju_insights: Array<{
     title: string;
@@ -51,6 +56,7 @@ export interface TrendData {
   avgRatio: number;
   changeRate: number;
   keywords: string[];
+  dailyData: Array<{ date: string; ratio: number }>;
 }
 
 export interface PerformanceStats {
@@ -62,66 +68,6 @@ export interface PerformanceStats {
 }
 
 // ─────────────────────────────────────────
-// 공식 응답 스키마 (Structured Output Schema)
-// ─────────────────────────────────────────
-
-const responseSchema = {
-  type: 'object',
-  properties: {
-    weekly_summary: {
-      type: 'object',
-      properties: {
-        headline: { type: 'string' },
-        summary: { type: 'string' },
-        highlight: { type: 'string' },
-        risingGroups: { type: 'array', items: { type: 'string' } },
-        groupTrends: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              group: { type: 'string' },
-              avgRatio: { type: 'number' },
-              changeRate: { type: 'number' },
-            },
-            required: ['group', 'avgRatio', 'changeRate'],
-          },
-        },
-      },
-      required: ['headline', 'summary', 'highlight', 'risingGroups', 'groupTrends'],
-    },
-    jeju_insights: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          title: { type: 'string' },
-          concept: { type: 'string' },
-          target: { type: 'string' },
-          timing: { type: 'string' },
-          jejuConnection: { type: 'string' },
-          basedOnTrend: { type: 'string' },
-        },
-        required: ['title', 'concept', 'target', 'timing', 'jejuConnection', 'basedOnTrend'],
-      },
-    },
-    trending_keywords: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          keyword: { type: 'string' },
-          change: { type: 'number' },
-          direction: { type: 'string', enum: ['up', 'down'] },
-        },
-        required: ['keyword', 'change', 'direction'],
-      },
-    },
-  },
-  required: ['weekly_summary', 'jeju_insights', 'trending_keywords'],
-};
-
-// ─────────────────────────────────────────
 // 통합 분석 함수
 // ─────────────────────────────────────────
 
@@ -131,11 +77,15 @@ export async function generateUnifiedInsight(
   persona: { ages?: string[]; gender?: string; device?: string } = {},
 ): Promise<UnifiedInsightResult> {
   try {
-    const ai = getAIClient();
+    const groq = getGroqClient();
 
-    const dataContext = trendData.map((t) => `[${t.group}] -> 평균:${t.avgRatio}, 변화:${t.changeRate}%`).join('\n');
+    const dataContext = trendData
+      .map((t) => {
+        const dailyStr = t.dailyData.map((d) => `${d.date.split('-').slice(1).join('/')}:${d.ratio}`).join(', ');
+        return `[${t.group}] 최근평균: ${t.avgRatio}, 전월대비변화: ${t.changeRate}%\n   └ 시계열(최근30일): ${dailyStr}`;
+      })
+      .join('\n');
 
-    // ── 타겟 페르소나 설명 보강 ──
     const ageLabels: Record<string, string> = {
       '3': '20-24세',
       '4': '25-29세',
@@ -159,71 +109,82 @@ export async function generateUnifiedInsight(
           .join(', ')}`
       : '';
 
-    const prompt = `
-      당신은 제주도 문화 기획 및 데이터 분석 전문가입니다. 다음 **네이버 검색 트렌드(수요)**와 **KOPIS 공연 현황(공급)** 데이터를 융합 분석하여 리포트를 작성하세요.
-      
-      [필독 - 데이터 인용 수칙]
-      1. **수치 절대 준수**: 리포트 본문에서 언급하는 상승률이나 변화폭은 반드시 아래 [데이터 요약] 섹션에 제공된 '변화' 수치를 **토씨 하나 틀리지 않고 그대로** 사용하십시오. 직접 계산하거나 수치를 어림잡지 마십시오.
-      2. **정합성 최우선**: 대시보드의 카드 수치와 당신의 리포트 수치가 다르면 데이터 신뢰도가 무너집니다. 반드시 제공된 수치를 '팩트'로 인용하세요.
+    // ── 1. 시스템 프롬프트: 기획 의도와 페르소나를 완벽히 반영한 디렉터 역할 부여 ──
+    const systemPrompt = `당신은 'Jeju Flow' 프로젝트를 이끄는 [하이엔드 문화 기획 디렉터]입니다.
+당신의 클라이언트는 매년 반복되는 식상한 지역 축제에 지쳐 있으며, 실제 데이터(수요 vs 공급)를 바탕으로 당장 실행 가능한 신선한 기획안을 간절히 찾는 '34세 전문 문화 기획자'입니다.
 
-      [분석 기준 정보]
-      - 현재 날짜: ${new Date().toLocaleDateString('ko-KR')}
-      - 현재 필터링 타겟: 연령대(${targetAges}), 성별(${targetGender}), 기기(${targetDevice})
-      
-      [데이터 요약]
-      1) 검색 트렌드 (이 수치를 그대로 인용하세요): 
-      ${dataContext}
-      2) 공연 현황: ${performanceContext}
-      
-      [작성 지침]
-      1. **groupTrends 작성**: 제공된 [데이터 요약]의 각 그룹명, 평균값, 변화율을 'groupTrends' 배열에 누락 없이 그대로 포함하십시오.
-      2. **타겟 준수 및 편향 방지**: 
-        - 현재 분석 대상은 '${targetAges}'입니다. 
-        - **만약 '${targetAges}'이 '전체 연령대'라면, '2030', 'MZ세대', '청년층'과 같은 특정 세대에 국한된 용어를 헤드라인이나 요약의 주체로 사용하지 마세요.**
-        - 대신 '제주 방문객 전체', '전 연령대', '다양한 연령층'과 같은 포괄적인 표현을 사용하십시오.
-      3. **페르소나 명명**: 'risingGroups'는 단순히 키워드(예: 축제)를 나열하지 말고, '~~족', '~~러', '~~컬렉터'와 같이 세련된 페르소나 명칭으로 작성하세요.
-      4. **수요-공급 격차 분석**: 사람들이 많이 검색하는 분야(수요)와 실제 진행 중인 공연(공급)을 비교하여, 유망한 분야를 제안하세요.
-      5. **jeju_insights**: 구체적인 문화 기획 아이디어를 6-8개 제안하세요.
-      6. **trending_keywords**: 현재 트렌드와 연관된 공연/문화 키워드 10개 이상을 생성하세요.
+제공된 네이버 검색 트렌드(수요)와 KOPIS 공연 현황(공급) 데이터를 분석하여, 아래의 [핵심 기획 철학]을 바탕으로 JSON 리포트를 작성하세요. 마크다운(\`\`\`json) 없이 순수한 JSON 객체만 반환해야 합니다.
+
+[핵심 기획 철학 및 작성 지침]
+1. 수요-공급 격차(Arbitrage) 공략: 검색 수요는 폭발하지만 실제 제주 내 관련 공연/축제 공급이 부족한 '블루오션'을 찾아내어 기획의 근거로 삼으세요. 특히 제공된 '전월 대비 변화(changeRate)'가 양수인 그룹을 집중 분석하십시오.
+2. 데이터 기반 기획: 단순히 평균값만 보지 말고, 제공된 '시계열 데이터'의 변동성이나 특정 시점의 피크를 분석하여 기획의 타이밍(timing)을 결정하십시오.
+3. 하이엔드 & 로컬리즘: 뻔한 관광 상품(단순 귤 따기, 흔한 해수욕장 축제)은 철저히 배제하세요. 제주의 고유한 자원(빈 감귤창고, 오름, 해녀 문화, 곶자왈, 로컬 식재료 등)과 최신 문화 트렌드를 결합한 감각적인 에디토리얼 스타일의 기획을 제안하세요.
+4. 타겟 편향 방지 및 페르소나 네이밍: 타겟이 '전체 연령대'일 경우 'MZ세대', '2030' 같은 식상한 단어는 금지합니다. 대신 "로컬감성디깅러", "제주사운드스케이프수집가", "웰니스노마드족" 등 트렌디하고 뾰족한 페르소나로 네이밍하세요.
+5. 실무 지향적 아이디어 (6~8개 제안): 'jeju_insights' 배열에는 기획자가 즉시 보고서에 쓸 수 있도록 컨셉, 타겟, 추천 시기, 제주와의 연관성, 트렌드 근거가 명확한 아이디어를 6~8개 생성하세요.
+
+[출력 JSON 형식]
+{
+  "weekly_summary": {
+    "headline": "전체 요약 헤드라인 (수요-공급 격차를 강조하는 세련된 문구)",
+    "summary": "데이터 기반 분석 요약 (수치 인용 시 제공된 변화율 데이터를 토씨 하나 틀리지 않고 팩트로 인용)",
+    "highlight": "가장 눈에 띄는 데이터 트렌드 특징",
+    "risingGroups": ["로컬감성디깅러", "제주공간탐험가"], 
+    "groupTrends": [
+      {"group": "그룹명", "avgRatio": 0.0, "changeRate": 0.0}
+    ]
+  },
+  "jeju_insights": [
+    {
+      "title": "기획안 제목 (예: 곶자왈 심야 앰비언트 라이브)",
+      "concept": "어떤 공간에서 무엇을 하는지 구체적인 컨셉 설명",
+      "target": "타겟 페르소나",
+      "timing": "추천 시기 및 시간대 (예: 11월 늦은 밤)",
+      "jejuConnection": "제주만의 로컬 자원 활용 방안",
+      "basedOnTrend": "이 기획이 도출된 데이터 기반 트렌드 근거"
+    }
+  ],
+  "trending_keywords": [
+    {"keyword": "키워드", "change": 0.0, "direction": "up 또는 down"}
+  ]
+}`;
+
+    // ── 2. 유저 프롬프트: 데이터 주입 ──
+    const userPrompt = `
+[분석 환경]
+- 현재 날짜: ${new Date().toLocaleDateString('ko-KR')}
+- 타겟 필터링: 연령대(${targetAges}), 성별(${targetGender}), 기기(${targetDevice})
+
+[데이터 요약 - 절대 수치 준수]
+1) 수요 데이터 (검색 트렌드 비율 및 변화율): 
+${dataContext}
+
+2) 공급 데이터 (KOPIS 공연 현황):
+${performanceContext}
+
+위 데이터를 바탕으로 최고의 문화 기획 인사이트 JSON을 생성해 주십시오.
     `;
 
-    // ── 공식 가이드 규격 호출 (최신 GenAI SDK 패턴) ──
-    // 사용자 요청에 따라 gemini-3.1-flash-lite-preview 모델만 단독 사용
-    const response = await ai.models.generateContent({
+    console.log(`[Groq] ${MODEL_NAME} 모델로 분석을 시작합니다...`);
+
+    const chatCompletion = await groq.chat.completions.create({
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
       model: MODEL_NAME,
-      contents: [{ parts: [{ text: prompt }] }],
-      config: {
-        responseMimeType: 'application/json',
-        responseSchema: responseSchema as any,
-      },
+      temperature: 0.7,
+      response_format: { type: 'json_object' },
     });
 
-    // ── 💡 응답 파싱: 최신 SDK는 response.text를 바로 제공하거나 response.response.text() 사용 ──
-    let responseText = '';
-
-    if (typeof (response as any).text === 'string') {
-      responseText = (response as any).text;
-    } else if (typeof (response as any).text === 'function') {
-      responseText = (response as any).text();
-    } else if ((response as any).candidates?.[0]?.content?.parts?.[0]?.text) {
-      responseText = (response as any).candidates[0].content.parts[0].text;
-    }
+    const responseText = chatCompletion.choices[0]?.message?.content;
 
     if (!responseText) {
       throw new Error('AI 응답 본문을 찾을 수 없습니다.');
     }
 
-    // JSON 문자열 정화 (마크다운 코드 블록 제거 등)
-    const cleanedJson = responseText.replace(/```json|```/g, '').trim();
-    return JSON.parse(cleanedJson);
+    return JSON.parse(responseText);
   } catch (error: any) {
-    console.error('Gemini API 분석 실패 상세:', error);
-
-    // ── 할당량 초과(Rate Limit) 감지 ──
-    if (error.message?.includes('429') || error.status === 429) {
-      throw new Error('AI 분석 할당량이 초과되었습니다 (분당 15회). 잠시 후 다시 시도해 주세요.');
-    }
-
-    throw error;
+    console.error('Groq API 분석 실패 상세:', error);
+    throw new Error(`분석 중 오류가 발생했습니다. (${error.message})`);
   }
 }

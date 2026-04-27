@@ -81,7 +81,38 @@ Content-Type: application/json
   "force": true
 }
 
-### 3-3. 생성된 인사이트 조회 (GET)
+
+### 3-3. 필터 적용된 AI 인사이트 생성 (남성, 모바일)
+POST {{baseUrl}}/api/insights
+Authorization: Bearer {{cronSecret}}
+Content-Type: application/json
+
+{
+  "force": true,
+  "filterKey": "m_mo_all_30",
+  "filters": {
+    "gender": "m",
+    "device": "mo",
+    "period": 30
+  }
+}
+
+### 3-4. 필터 적용된 AI 인사이트 생성 (여성, 20-30대)
+POST {{baseUrl}}/api/insights
+Authorization: Bearer {{cronSecret}}
+Content-Type: application/json
+
+{
+  "force": true,
+  "filterKey": "f_all_3_4_30",
+  "filters": {
+    "gender": "f",
+    "ages": ["3", "4"],
+    "period": 30
+  }
+}
+
+### 3-5. 생성된 인사이트 조회 (GET)
 GET {{baseUrl}}/api/insights
 
 
