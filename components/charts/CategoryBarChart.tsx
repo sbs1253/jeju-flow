@@ -77,7 +77,7 @@ export function CategoryBarChart({
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-4 flex-1">
-        <div style={{ width: "100%", height: calculatedHeight }}>
+        <div className="w-full min-w-0" style={{ height: calculatedHeight }}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={chartData}

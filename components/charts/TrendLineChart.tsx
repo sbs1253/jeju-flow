@@ -61,7 +61,7 @@ export function TrendLineChart({
   ];
 
   return (
-    <div className="h-[400px] w-full bg-transparent min-h-[400px]">
+    <div className="h-[400px] w-full bg-transparent min-h-[400px] min-w-0">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart
           data={mergedData}

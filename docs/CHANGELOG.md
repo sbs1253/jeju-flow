@@ -14,3 +14,15 @@
 - `lib/gemini.ts` → `lib/ai.ts` 통합 인터페이스로 리팩토링.
 - API 및 UI 수치 계산 로직 100% 동기화 (Data Parity 확보).
 - Groq 모델 전용 시스템 프롬프트 엔지니어링 최적화.
+
+## [2026-04-27] 모바일 최적화 및 아키텍처 문서화
+
+### 📱 UI/UX 개선
+- **Safe Area 대응**: 아이폰 노치 및 홈 인디케이터 영역의 UI 겹침 현상 해결 (`env(safe-area-inset-top/bottom)` 적용).
+- **반응형 뷰포트**: `h-screen`을 `h-dvh`로 변경하여 모바일 브라우저 주소창 높이 변화에 유연하게 대응.
+- **공연 상세 팝업 최적화**: 모바일 다이얼로그 높이 조정 및 하단 버튼 가독성 개선.
+
+### 📄 문서화 및 설계
+- **`ARCHITECTURE.md` 추가**: Hybrid On-Demand Fetching 데이터 전략 및 프로젝트 핵심 아키텍처 기록.
+- **`PLANNING_MOBILE_AND_DATA.md` 생성**: 모바일 UI 최적화 작업 계획 기록.
+

@@ -1,20 +1,11 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Calendar,
-  MapPin,
-  Ticket,
-  ChevronRight,
-  Info,
-} from 'lucide-react';
+import { Calendar, MapPin, Ticket, ChevronRight, Info } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useState, useEffect } from 'react';
-import {
-  Dialog,
-  DialogContent,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 
 import { Performance } from '@/types/performance';
@@ -183,9 +174,11 @@ export function PerformanceCard({ performance }: PerformanceCardProps) {
 
       {/* Detail Dialog */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-6xl h-[90vh] md:h-[85vh] p-0 overflow-hidden border-none shadow-2xl shadow-black/80 bg-[#0a0c10] rounded-[2.5rem] flex flex-col md:flex-row">
+        <DialogContent className="sm:max-w-6xl w-[calc(100%-2rem)] h-[92dvh] md:h-[85vh] p-0 overflow-y-auto md:overflow-hidden border-none shadow-2xl shadow-black/80 bg-[#0a0c10] rounded-[2rem] md:rounded-[2.5rem] flex flex-col md:flex-row focus:outline-none">
+          {/* Mobile Safe Area Top Padding (Mobile Only) */}
+          <div className="md:hidden h-[env(safe-area-inset-top)] bg-[#050608] shrink-0" />
           {/* Left: Poster & Basic Info (400px) */}
-          <div className="w-full md:w-[400px] h-full flex flex-col bg-[#050608] border-r border-white/5 overflow-y-auto custom-scrollbar">
+          <div className="w-full md:w-[400px] h-auto md:h-full flex flex-col bg-[#050608] md:border-r border-white/5 overflow-visible md:overflow-y-auto custom-scrollbar">
             {/* Poster at the Top */}
             <div className="relative w-full aspect-[3/4] flex-shrink-0 group/poster overflow-hidden">
               <img
@@ -201,7 +194,7 @@ export function PerformanceCard({ performance }: PerformanceCardProps) {
             </div>
 
             {/* Basic Info below Poster */}
-            <div className="p-8 space-y-6">
+            <div className="p-6 md:p-8 space-y-4 md:space-y-6">
               <div className="flex items-center gap-3">
                 <Badge className="bg-sky-500/20 text-sky-400 border-sky-500/30 font-black uppercase tracking-widest text-[10px] py-1.5 px-4 rounded-full">
                   {performance.genre}
@@ -209,7 +202,9 @@ export function PerformanceCard({ performance }: PerformanceCardProps) {
               </div>
 
               <div className="space-y-4">
-                <h2 className="text-3xl font-black text-white leading-tight tracking-tighter">{performance.title}</h2>
+                <h2 className="text-2xl md:text-3xl font-black text-white leading-tight tracking-tighter">
+                  {performance.title}
+                </h2>
                 <div className="flex items-center gap-3 text-white/60 text-sm font-bold">
                   <MapPin className="w-4 h-4 text-sky-400" />
                   {performance.venue}
@@ -221,8 +216,8 @@ export function PerformanceCard({ performance }: PerformanceCardProps) {
           </div>
 
           {/* Right: Detailed Info (Flexible) */}
-          <div className="flex-1 min-h-0 flex flex-col bg-[#0a0c10] text-white overflow-y-auto custom-scrollbar">
-            <div className="p-10 pt-16">
+          <div className="w-full h-auto md:flex-1 md:min-h-0 flex flex-col bg-[#0a0c10] text-white overflow-visible md:overflow-y-auto custom-scrollbar">
+            <div className="p-6 md:p-10 pt-10 md:pt-16">
               <div className="space-y-12 max-w-2xl mx-auto ">
                 {/* Top Stats */}
                 <div className="grid grid-cols-2 gap-8">
@@ -272,17 +267,17 @@ export function PerformanceCard({ performance }: PerformanceCardProps) {
                   <div className="space-y-4">
                     <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 ml-4">RUNTIME</h4>
                     <div className="bg-white/[0.03] rounded-2xl p-6 border border-white/10">
-                      <p className="text-sm font-black text-sky-400">
+                      <div className="text-sm font-black text-sky-400">
                         {loading ? <Skeleton className="h-4 w-16 bg-white/10" /> : displayData.runtime}
-                      </p>
+                      </div>
                     </div>
                   </div>
                   <div className="space-y-4">
                     <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 ml-4">PRICE</h4>
                     <div className="bg-white/[0.03] rounded-2xl p-6 border border-white/10">
-                      <p className="text-sm font-black text-sky-400">
+                      <div className="text-sm font-black text-sky-400">
                         {loading ? <Skeleton className="h-4 w-24 bg-white/10" /> : displayData.price}
-                      </p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -387,17 +382,17 @@ export function PerformanceCard({ performance }: PerformanceCardProps) {
             </div>
 
             {/* Bottom Actions */}
-            <div className="p-10 flex gap-6">
+            <div className="px-5 py-8 md:p-10 pb-[calc(2rem+env(safe-area-inset-bottom))] flex flex-col sm:flex-row gap-6 md:gap-6">
               <Button
                 variant="ghost"
-                className="flex-1 h-16 rounded-2xl font-black uppercase tracking-[0.3em] text-[11px] text-white/40 hover:text-white hover:bg-white/5 transition-all"
+                className="flex-1 h-14 md:h-16 py-2 rounded-2xl font-black uppercase tracking-widest md:tracking-[0.3em] text-[13px] md:text-[11px] text-white/40 hover:text-white hover:bg-white/5 transition-all"
                 onClick={() => setIsOpen(false)}
               >
                 닫기
               </Button>
               <Button
                 variant="default"
-                className="flex-[2] h-16 rounded-2xl bg-sky-500 hover:bg-sky-400 text-white font-black uppercase tracking-[0.3em] text-[11px] gap-4 shadow-[0_20px_50px_rgba(14,165,233,0.3)] transition-all active:scale-95"
+                className="flex-[2] h-14 md:h-16 rounded-2xl bg-sky-500 hover:bg-sky-400 text-white font-black uppercase tracking-widest md:tracking-[0.3em] text-[13px] md:text-[11px] gap-4 shadow-[0_20px_50px_rgba(14,165,233,0.3)] transition-all py-2 active:scale-95"
                 onClick={handleBooking}
               >
                 <Ticket className="w-5 h-5" />

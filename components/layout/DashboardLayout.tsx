@@ -154,9 +154,9 @@ export default function DashboardLayout({
   const pathname = usePathname();
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background text-foreground font-sans">
+    <div className="flex h-dvh overflow-hidden bg-background text-foreground font-sans">
       {/* Sidebar */}
-      <aside className="hidden lg:flex flex-col w-64 h-screen fixed left-0 top-0 border-r z-50 border-border/40 bg-background/60 backdrop-blur-xl">
+      <aside className="hidden lg:flex flex-col w-64 h-full fixed left-0 top-0 border-r z-50 border-border/40 bg-background/60 backdrop-blur-xl">
         <div className="p-6">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-primary text-primary-foreground">
@@ -187,7 +187,7 @@ export default function DashboardLayout({
                   "w-5 h-5 transition-transform group-hover:scale-110",
                   isActive ? "" : "opacity-70"
                 )} />
-                {item.label}
+                <span className="truncate">{item.label}</span>
               </Link>
             );
           })}
@@ -205,7 +205,7 @@ export default function DashboardLayout({
       </aside>
 
       {/* Main Content Area */}
-      <main className="lg:ml-64 min-h-screen relative flex flex-col flex-1 overflow-auto">
+      <main className="lg:ml-64 min-h-dvh relative flex flex-col flex-1 overflow-auto">
 
         {/* Subtle background glow effects */}
         <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
@@ -214,7 +214,7 @@ export default function DashboardLayout({
         </div>
 
         {/* Header - Mobile Only */}
-        <div className="lg:hidden sticky top-0 bg-background/80 backdrop-blur-md border-b border-border/40 p-4 flex items-center justify-between z-40">
+        <div className="lg:hidden sticky top-0 bg-background/80 backdrop-blur-md border-b border-border/40 p-4 pt-[calc(1rem+env(safe-area-inset-top))] flex items-center justify-between z-40">
           <Link href="/" className="flex items-center gap-2">
             <Palmtree className="text-jeju-ocean w-6 h-6" />
             <span className="font-black tracking-tighter">JEJU FLOW</span>
