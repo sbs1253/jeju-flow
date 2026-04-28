@@ -31,3 +31,7 @@
 - **Editorial Design**: 잡지 스타일의 고해상도 타이포그래피와 레이아웃.
 - **Mobile First**: Safe Area와 Dynamic Viewport 단위를 사용하여 아이폰 및 모바일 브라우저 최적화.
 - **Glassmorphism**: 배경 블러 및 반투명 요소를 활용한 프리미엄 디자인.
+
+## 4. Monitoring & Analytics
+- **Vercel Analytics**: 실제 사용자 트래픽 분석 및 웹 바이탈(Web Vitals) 성능 모니터링을 통한 최적화 기반 마련.
+
